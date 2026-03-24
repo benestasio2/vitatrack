@@ -216,13 +216,156 @@ textarea{resize:vertical;min-height:60px}
 #scanner-result p{font-size:12.5px;color:var(--text2);line-height:1.6}
 .scanner-btns{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;justify-content:center}
 #scanner-torch{display:none}
-/* RESPONSIVE */
+/* ── DESKTOP RESPONSIVE (tablet) ── */
 @media(max-width:860px){
   .sidebar{width:52px}.logo,.nav-text,.sidebar-bottom{display:none}
   .main{margin-left:52px;padding:16px 14px}
   .g2,.g3{grid-template-columns:1fr}.fr,.fr3{grid-template-columns:1fr}
   .bmr-grid{grid-template-columns:repeat(2,1fr)}
 }
+
+/* ══════════════════════════════════════════════════════════
+   MOBILE LAYOUT  <768px
+══════════════════════════════════════════════════════════ */
+@media(max-width:767px){
+  /* Hide desktop sidebar entirely */
+  .sidebar{display:none!important}
+  /* Main: full width, no left margin, bottom padding for nav bar */
+  .main{margin-left:0!important;padding:14px 14px 80px!important}
+  /* Single column everything */
+  .g2,.g3{grid-template-columns:1fr}
+  .fr,.fr3{grid-template-columns:1fr}
+  .bmr-grid{grid-template-columns:repeat(2,1fr)}
+  /* Hide desktop-only elements */
+  .desktop-only{display:none!important}
+  /* Show mobile-only elements */
+  .mobile-only{display:block!important}
+  /* Stat cards smaller */
+  .sc-val{font-size:18px}
+  /* Period tabs scroll */
+  .period-row{overflow-x:auto}
+  /* Cards tighter padding */
+  .card{padding:14px}
+  /* Chart heights smaller */
+  .cw{height:150px}.cw-sm{height:130px}.cw-xs{height:110px}
+  /* Page header smaller */
+  .ph h1{font-size:20px}
+  /* Pill wrap */
+  .pills{gap:5px}
+  .pill{font-size:11.5px;padding:4px 9px}
+  /* Stat grid compact */
+  .sg{grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px}
+  /* Toolbar stack */
+  .toolbar{flex-direction:column;gap:8px}
+  /* stab-bar scroll */
+  .stab-bar{overflow-x:auto;white-space:nowrap;width:100%}
+}
+
+/* ── BOTTOM NAV BAR ── */
+.bottom-nav{
+  display:none;
+  position:fixed;bottom:0;left:0;right:0;
+  height:62px;
+  background:var(--bg2);
+  border-top:1px solid var(--border2);
+  z-index:200;
+  align-items:stretch;
+  /* safe area for iPhone home bar */
+  padding-bottom:env(safe-area-inset-bottom);
+}
+@media(max-width:767px){ .bottom-nav{display:flex!important} }
+.bn-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:3px;
+  cursor:pointer;color:var(--text3);
+  font-family:'DM Sans',sans-serif;font-size:10px;font-weight:500;
+  border:none;background:none;padding:8px 0;
+  transition:color .15s;
+  -webkit-tap-highlight-color:transparent;
+}
+.bn-item .bn-icon{font-size:20px;line-height:1}
+.bn-item.active{color:var(--amber)}
+.bn-item:active{opacity:.7}
+
+/* ── MOBILE QUICK-ADD FLOATING BUTTON ── */
+.fab{
+  display:none;
+  position:fixed;bottom:72px;right:16px;
+  width:52px;height:52px;border-radius:50%;
+  background:var(--amber);color:#000;
+  font-size:26px;font-weight:600;
+  border:none;cursor:pointer;
+  box-shadow:0 4px 16px rgba(245,166,35,.45);
+  align-items:center;justify-content:center;
+  z-index:199;transition:transform .15s;
+  -webkit-tap-highlight-color:transparent;
+}
+@media(max-width:767px){ .fab{display:flex!important} }
+.fab:active{transform:scale(.93)}
+
+/* ── MOBILE DASHBOARD RING ── */
+.m-ring-row{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.m-ring-wrap{position:relative;width:110px;height:110px;flex-shrink:0}
+.m-ring-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+.m-ring-val{font-size:17px;font-weight:700;line-height:1}
+.m-ring-lbl{font-size:10px;color:var(--text3);margin-top:2px}
+.m-kpi-grid{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.m-kpi{background:var(--bg3);border-radius:8px;padding:9px 10px}
+.m-kpi-val{font-size:16px;font-weight:700;line-height:1}
+.m-kpi-lbl{font-size:10px;color:var(--text3);margin-top:3px}
+
+/* ── MOBILE QUICK ACTIONS ── */
+.m-quick-row{display:flex;gap:8px;margin-bottom:14px;overflow-x:auto;padding-bottom:2px}
+.m-qa{background:var(--bg3);border:1px solid var(--border);border-radius:10px;
+  padding:10px 14px;cursor:pointer;white-space:nowrap;
+  font-family:'DM Sans',sans-serif;font-size:12.5px;font-weight:500;color:var(--text2);
+  flex-shrink:0;transition:all .15s;-webkit-tap-highlight-color:transparent}
+.m-qa:active{background:var(--bg4);color:var(--amber)}
+
+/* ── MOBILE FORM MODAL ── */
+.m-modal{
+  display:none;position:fixed;inset:0;z-index:300;
+  flex-direction:column;background:var(--bg);
+  overflow-y:auto;
+}
+.m-modal.open{display:flex}
+.m-modal-hd{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 16px 12px;border-bottom:1px solid var(--border);
+  background:var(--bg2);position:sticky;top:0;z-index:1;
+}
+.m-modal-hd h2{font-family:'Playfair Display',serif;font-size:18px;font-weight:600}
+.m-modal-close{background:none;border:none;color:var(--text2);font-size:24px;
+  cursor:pointer;padding:0 4px;font-family:'DM Sans',sans-serif;line-height:1}
+.m-modal-body{padding:16px;flex:1}
+
+/* ── MOBILE SECTION HEADER WITH BACK ── */
+.m-section-hd{
+  display:none;align-items:center;gap:10px;
+  padding:14px 0 10px;margin-bottom:4px;
+}
+@media(max-width:767px){.m-section-hd{display:flex}}
+.m-section-hd h1{font-family:'Playfair Display',serif;font-size:20px;font-weight:600}
+
+/* ── MOBILE MEAL SLOT COMPACT ── */
+.ms-compact{background:var(--bg3);border:1px solid var(--border);
+  border-radius:var(--r);padding:12px;margin-bottom:8px}
+.ms-compact-hd{display:flex;justify-content:space-between;align-items:center;
+  cursor:pointer;-webkit-tap-highlight-color:transparent}
+.ms-compact-title{font-size:13.5px;font-weight:600}
+.ms-compact-meta{font-size:12px;color:var(--amber)}
+.ms-compact-body{margin-top:10px;display:none}
+.ms-compact-body.open{display:block}
+
+/* ── MOBILE INLINE PROGRESS ── */
+.m-prog-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.m-prog-lbl{font-size:12px;color:var(--text2);min-width:80px}
+.m-prog-bar{flex:1;height:6px;background:var(--bg4);border-radius:3px;overflow:hidden}
+.m-prog-fill{height:100%;border-radius:3px}
+.m-prog-val{font-size:11px;color:var(--text3);min-width:55px;text-align:right}
+
+/* ── MOBILE SLEEP+NEAT COMBINED ── */
+.m-combined .card{margin-bottom:12px}
 </style>
 </head>
 <body>
@@ -242,7 +385,138 @@ textarea{resize:vertical;min-height:60px}
   <div class="sidebar-bottom"><div class="sidebar-date" id="sb-date"></div><div style="font-size:10px;color:var(--text3);margin-top:2px;opacity:.6">v2.0</div></div>
 </nav>
 
-<!-- ═══ MAIN ═══ -->
+<!-- ═══ BOTTOM NAV (mobile only) ═══ -->
+<nav class="bottom-nav" id="bottom-nav">
+  <button class="bn-item active" id="bn-dashboard" onclick="nav('dashboard')"><span class="bn-icon">📊</span>Cruscotto</button>
+  <button class="bn-item" id="bn-nutrition" onclick="nav('nutrition')"><span class="bn-icon">🍽</span>Cibo</button>
+  <button class="bn-item" id="bn-exercise" onclick="nav('exercise')"><span class="bn-icon">💪</span>Sport</button>
+  <button class="bn-item" id="bn-sleepneat" onclick="nav('sleepneat')"><span class="bn-icon">😴</span>Sonno</button>
+  <button class="bn-item" id="bn-settings" onclick="nav('settings')"><span class="bn-icon">⚙️</span>Impost.</button>
+</nav>
+
+<!-- ═══ FAB — quick add (mobile only) ═══ -->
+<button class="fab" id="fab" onclick="openFab()" title="Aggiungi">+</button>
+
+<!-- ═══ FAB MENU (mobile only) ═══ -->
+<div id="fab-menu" style="display:none;position:fixed;bottom:130px;right:12px;z-index:250;flex-direction:column;gap:8px;align-items:flex-end">
+  <button onclick="fabAction('food')" style="background:var(--amber);color:#000;border:none;border-radius:20px;padding:10px 16px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;box-shadow:0 3px 12px rgba(0,0,0,.3)">🍽 Aggiungi pasto</button>
+  <button onclick="fabAction('water')" style="background:var(--blue-dim);color:var(--blue);border:1px solid rgba(74,158,255,.3);border-radius:20px;padding:10px 16px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;box-shadow:0 3px 12px rgba(0,0,0,.3)">💧 Acqua</button>
+  <button onclick="fabAction('exercise')" style="background:var(--blue-dim);color:var(--blue);border:1px solid rgba(74,158,255,.3);border-radius:20px;padding:10px 16px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;box-shadow:0 3px 12px rgba(0,0,0,.3)">💪 Allenamento</button>
+  <button onclick="fabAction('steps')" style="background:var(--green-dim);color:var(--green);border:1px solid rgba(34,199,144,.3);border-radius:20px;padding:10px 16px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;box-shadow:0 3px 12px rgba(0,0,0,.3)">👟 Passi</button>
+  <button onclick="fabAction('sleep')" style="background:var(--purple-dim);color:var(--purple);border:1px solid rgba(155,113,245,.3);border-radius:20px;padding:10px 16px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;box-shadow:0 3px 12px rgba(0,0,0,.3)">😴 Sonno</button>
+</div>
+<div id="fab-overlay" onclick="closeFab()" style="display:none;position:fixed;inset:0;z-index:240;background:rgba(0,0,0,.5)"></div>
+
+<!-- ═══ MOBILE QUICK-ADD MODALS ═══ -->
+
+<!-- Food quick add -->
+<div class="m-modal" id="m-modal-food">
+  <div class="m-modal-hd"><h2>🍽 Aggiungi Pasto</h2><button class="m-modal-close" onclick="closeMModal('food')">×</button></div>
+  <div class="m-modal-body">
+    <div class="fg food-suggest">
+      <label>Alimento</label>
+      <div style="display:flex;gap:6px">
+        <div style="flex:1;position:relative">
+          <input id="mf-name" type="text" placeholder="Cerca o inserisci..." autocomplete="off" oninput="mFoodSearch(this.value)">
+          <div class="fs-list" id="mf-suggest"></div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="openScanner('m-diary')" style="padding:0 10px;font-size:18px;flex-shrink:0">📷</button>
+      </div>
+    </div>
+    <div id="mf-qty-row" style="display:none" class="fg">
+      <label>Quantità (g)</label>
+      <input id="mf-qty-db" type="number" placeholder="100" min="0" step="1" oninput="calcMFoodFromDb()">
+    </div>
+    <div id="mf-manual-row">
+      <div class="fr">
+        <div class="fg"><label>Calorie (kcal)</label><input id="mf-kcal" type="number" placeholder="400" min="0"></div>
+        <div class="fg"><label>Pasto</label><select id="mf-slot"><option value="breakfast">🌅 Colazione</option><option value="lunch">☀️ Pranzo</option><option value="dinner">🌙 Cena</option><option value="snack">🍪 Snack</option></select></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>Proteine (g)</label><input id="mf-pro" type="number" placeholder="15" min="0" step="0.1"></div>
+        <div class="fg"><label>Carboidrati (g)</label><input id="mf-carb" type="number" placeholder="50" min="0" step="0.1"></div>
+      </div>
+      <div class="fg"><label>Grassi (g)</label><input id="mf-fat" type="number" placeholder="12" min="0" step="0.1"></div>
+    </div>
+    <div id="mf-slot-row" style="display:none" class="fg">
+      <label>Pasto</label>
+      <select id="mf-slot2"><option value="breakfast">🌅 Colazione</option><option value="lunch">☀️ Pranzo</option><option value="dinner">🌙 Cena</option><option value="snack">🍪 Snack</option></select>
+    </div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="addFoodMobile()">+ Aggiungi</button>
+  </div>
+</div>
+
+<!-- Water quick add -->
+<div class="m-modal" id="m-modal-water">
+  <div class="m-modal-hd"><h2>💧 Idratazione</h2><button class="m-modal-close" onclick="closeMModal('water')">×</button></div>
+  <div class="m-modal-body">
+    <div id="m-water-content"></div>
+  </div>
+</div>
+
+<!-- Exercise quick add -->
+<div class="m-modal" id="m-modal-exercise">
+  <div class="m-modal-hd"><h2>💪 Allenamento</h2><button class="m-modal-close" onclick="closeMModal('exercise')">×</button></div>
+  <div class="m-modal-body">
+    <div class="fg"><label>Nome</label><input id="mex-name" type="text" placeholder="es. Corsa"></div>
+    <div class="fg"><label>Tipo</label>
+      <div class="pills" id="mex-type-pills">
+        <div class="pill sel" data-v="cardio" onclick="selPill(this,'mex-type')">🏃 Cardio</div>
+        <div class="pill" data-v="weights" onclick="selPill(this,'mex-type')">🏋️ Pesi</div>
+        <div class="pill" data-v="bodyweight" onclick="selPill(this,'mex-type')">🤸 Corpo Libero</div>
+        <div class="pill" data-v="circuit" onclick="selPill(this,'mex-type')">🔄 Circuito</div>
+        <div class="pill" data-v="hiit" onclick="selPill(this,'mex-type')">⚡ HIIT</div>
+        <div class="pill" data-v="other" onclick="selPill(this,'mex-type')">• Altro</div>
+      </div>
+      <input type="hidden" id="mex-type" value="cardio">
+    </div>
+    <div class="fr">
+      <div class="fg"><label>Durata (min)</label><input id="mex-dur" type="number" placeholder="45" min="1"></div>
+      <div class="fg"><label>Calorie (kcal)</label><input id="mex-kcal" type="number" placeholder="300" min="0"></div>
+    </div>
+    <div class="fg"><label>Intensità</label>
+      <select id="mex-int"><option value="low">🟢 Bassa</option><option value="mid" selected>🟡 Media</option><option value="high">🔴 Alta</option></select>
+    </div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="addExerciseMobile()">+ Aggiungi</button>
+  </div>
+</div>
+
+<!-- Steps quick add -->
+<div class="m-modal" id="m-modal-steps">
+  <div class="m-modal-hd"><h2>👟 Passi</h2><button class="m-modal-close" onclick="closeMModal('steps')">×</button></div>
+  <div class="m-modal-body">
+    <div class="fg"><label>Passi di oggi</label><input id="ms-steps" type="number" placeholder="8000" min="0" step="100" oninput="calcMStepsKcal()"></div>
+    <div id="ms-kcal-info" style="font-size:12.5px;color:var(--text2);margin-bottom:14px"></div>
+    <div style="height:6px;background:var(--bg4);border-radius:3px;overflow:hidden;margin-bottom:14px"><div id="ms-bar" style="height:100%;background:var(--blue);border-radius:3px;width:0;transition:width .4s"></div></div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="saveStepsMobile()">💾 Salva Passi</button>
+  </div>
+</div>
+
+<!-- Sleep quick add -->
+<div class="m-modal" id="m-modal-sleep">
+  <div class="m-modal-hd"><h2>😴 Sonno</h2><button class="m-modal-close" onclick="closeMModal('sleep')">×</button></div>
+  <div class="m-modal-body">
+    <div class="fr">
+      <div class="fg"><label>Addormentamento</label><input id="msl-start" type="time" value="23:00" oninput="calcMSl()"></div>
+      <div class="fg"><label>Sveglia</label><input id="msl-end" type="time" value="07:00" oninput="calcMSl()"></div>
+    </div>
+    <div style="background:var(--bg3);padding:10px 12px;border-radius:var(--rsm);border:1px solid var(--border);margin-bottom:14px;font-size:13px">
+      Ore: <span id="msl-calc" style="color:var(--amber);font-weight:700">8.0h</span>
+      <span id="msl-vs" style="font-size:11px;color:var(--text3);margin-left:8px"></span>
+    </div>
+    <div class="fg"><label>Qualità</label>
+      <div class="qs" id="msl-quality">
+        <div class="qs-item" onclick="setMQ(1)">😫</div>
+        <div class="qs-item" onclick="setMQ(2)">😕</div>
+        <div class="qs-item" onclick="setMQ(3)">😐</div>
+        <div class="qs-item sel" onclick="setMQ(4)">🙂</div>
+        <div class="qs-item" onclick="setMQ(5)">😊</div>
+      </div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="saveSleepMobile()">💾 Salva Sonno</button>
+  </div>
+</div>
+
 <main class="main">
 
 <!-- ──────────────────── DASHBOARD ──────────────────── -->
@@ -261,8 +535,8 @@ textarea{resize:vertical;min-height:60px}
       <div class="vtab" onclick="setView('avg')">Media / giorno</div>
     </div>
   </div>
-  <div class="sg" id="d-stats"></div>
-  <div class="g2" style="margin-bottom:14px">
+  <div class="sg desktop-only" id="d-stats"></div>
+  <div class="g2 desktop-only" style="margin-bottom:14px">
     <div class="card">
       <div class="card-title" id="d-ring-title">Bilancio Calorico</div>
       <div id="d-ring-area">
@@ -281,7 +555,7 @@ textarea{resize:vertical;min-height:60px}
       <div class="cw-xs"><canvas id="wk-c"></canvas></div>
     </div>
   </div>
-  <div class="g3" id="d-activity"></div>
+  <div class="g3 desktop-only" id="d-activity"></div>
 </section>
 
 <!-- ──────────────────── PROFILE ──────────────────── -->
@@ -755,6 +1029,67 @@ textarea{resize:vertical;min-height:60px}
   </div>
 </section>
 
+
+<!-- ──────────────────── SONNO + NEAT (mobile combined) ──────────────────── -->
+<section id="s-sleepneat" class="section">
+  <div class="ph"><h1>Sonno &amp; NEAT</h1><p id="sn-date-label"></p></div>
+  <div class="m-combined">
+    <!-- Sonno card -->
+    <div class="card">
+      <div class="card-title">😴 Sonno</div>
+      <div class="fr">
+        <div class="fg"><label>Addormentamento</label><input id="sn-start" type="time" value="23:00" oninput="calcSn()"></div>
+        <div class="fg"><label>Sveglia</label><input id="sn-end" type="time" value="07:00" oninput="calcSn()"></div>
+      </div>
+      <div style="background:var(--bg3);padding:9px 12px;border-radius:var(--rsm);border:1px solid var(--border);margin-bottom:12px;font-size:13px">
+        Ore: <span id="sn-calc" style="color:var(--purple);font-weight:700">8.0h</span>
+        <span id="sn-vs" style="font-size:11px;color:var(--text3);margin-left:8px"></span>
+      </div>
+      <div class="fg"><label>Qualità</label>
+        <div class="qs" id="sn-quality">
+          <div class="qs-item" onclick="setSnQ(1)">😫</div>
+          <div class="qs-item" onclick="setSnQ(2)">😕</div>
+          <div class="qs-item" onclick="setSnQ(3)">😐</div>
+          <div class="qs-item sel" onclick="setSnQ(4)">🙂</div>
+          <div class="qs-item" onclick="setSnQ(5)">😊</div>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-sm" style="width:100%;justify-content:center" onclick="saveSnSleep()">💾 Salva Sonno</button>
+    </div>
+    <!-- Passi card -->
+    <div class="card">
+      <div class="card-title">👟 Passi &amp; NEAT</div>
+      <div class="steps-card" style="margin-bottom:10px">
+        <div class="fr" style="align-items:flex-end;margin-bottom:8px">
+          <div class="fg" style="margin:0"><label>Passi oggi</label><input id="sn-steps" type="number" placeholder="0" min="0" step="100" oninput="calcSnSteps()"></div>
+          <button class="btn btn-ghost btn-sm" onclick="saveSnSteps()">Salva</button>
+        </div>
+        <div style="height:6px;background:var(--bg4);border-radius:3px;overflow:hidden"><div id="sn-steps-bar" style="height:100%;background:var(--blue);border-radius:3px;width:0;transition:width .4s"></div></div>
+        <div id="sn-steps-info" style="font-size:11px;color:var(--text3);margin-top:4px"></div>
+      </div>
+      <!-- NEAT quick add -->
+      <div class="card-title" style="margin-bottom:8px">+ Attività NEAT</div>
+      <div class="fg"><label>Tipo</label>
+        <select id="sn-neat-type" onchange="calcSnNeat()">
+          <option value="walk_slow">🚶 Camminata lenta</option>
+          <option value="walk_fast">🚶 Camminata veloce</option>
+          <option value="cleaning">🧹 Pulizie</option>
+          <option value="gardening">🌿 Giardinaggio</option>
+          <option value="cooking">🍳 Cucinare</option>
+          <option value="stairs">🪜 Scale</option>
+          <option value="other">• Altro</option>
+        </select>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>Durata (min)</label><input id="sn-neat-dur" type="number" placeholder="30" min="1" oninput="calcSnNeat()"></div>
+        <div class="fg"><label>Kcal stimate</label><input id="sn-neat-kcal" type="number" placeholder="–" min="0"></div>
+      </div>
+      <button class="btn btn-ghost btn-sm" style="width:100%;justify-content:center" onclick="addSnNeat()">+ Aggiungi NEAT</button>
+      <!-- Today's log -->
+      <div id="sn-neat-log" style="margin-top:10px"></div>
+    </div>
+  </div>
+</section>
 
 </main>
 <div id="toast"></div>
@@ -2398,6 +2733,407 @@ document.getElementById('sb-date').textContent=new Date().toLocaleDateString('it
 // Show period toggle state
 document.getElementById('d-vtoggle').style.display='none';
 if(!S.profile.name||!S.profile.age){setTimeout(()=>nav('settings'),400);}
+
+// ════════════════════════════════════════════════════════════
+// MOBILE UI
+// ════════════════════════════════════════════════════════════
+const isMobile = () => window.innerWidth <= 767;
+
+// ── Bottom nav sync ──────────────────────────────────────
+function syncBottomNav(s){
+  if(!isMobile()) return;
+  document.querySelectorAll('.bn-item').forEach(b => b.classList.remove('active'));
+  const map = {dashboard:'bn-dashboard',nutrition:'bn-nutrition',exercise:'bn-exercise',sleepneat:'bn-sleepneat',sleep:'bn-sleepneat',neat:'bn-sleepneat',settings:'bn-settings'};
+  const bid = map[s];
+  if(bid){ const el=document.getElementById(bid); if(el) el.classList.add('active'); }
+}
+
+// Patch nav() to sync bottom nav and handle mobile routing
+const _origNav = nav;
+nav = function(s){
+  // On mobile, route sleep/neat to combined view
+  if(isMobile() && (s==='sleep'||s==='neat')) s='sleepneat';
+  _origNav(s);
+  syncBottomNav(s);
+  // If settings needed for initial setup
+  if(s==='settings') renderSettings();
+  // Scroll to top
+  document.querySelector('.main').scrollTo(0,0);
+};
+
+// ── FAB ────────────────────────────────────────────────
+let fabOpen = false;
+function openFab(){
+  fabOpen = !fabOpen;
+  document.getElementById('fab-menu').style.display = fabOpen ? 'flex' : 'none';
+  document.getElementById('fab-overlay').style.display = fabOpen ? 'block' : 'none';
+  document.getElementById('fab').textContent = fabOpen ? '×' : '+';
+}
+function closeFab(){
+  fabOpen = false;
+  document.getElementById('fab-menu').style.display = 'none';
+  document.getElementById('fab-overlay').style.display = 'none';
+  document.getElementById('fab').textContent = '+';
+}
+function fabAction(type){
+  closeFab();
+  openMModal(type);
+}
+
+// ── Mobile Modals ────────────────────────────────────
+function openMModal(type){
+  document.getElementById('m-modal-'+type).classList.add('open');
+  if(type==='water') renderMWater();
+  if(type==='steps'){ const l=getLog(curDate); document.getElementById('ms-steps').value=l.steps||''; calcMStepsKcal(); }
+  if(type==='sleep'){ const l=getLog(curDate); document.getElementById('msl-start').value=l.sleep.bedtime||'23:00'; document.getElementById('msl-end').value=l.sleep.wakeup||'07:00'; mSleepQ=l.sleep.quality||4; updMQ(); calcMSl(); }
+  if(type==='food'){ document.getElementById('mf-name').value=''; clearMFoodForm(); }
+}
+function closeMModal(type){
+  document.getElementById('m-modal-'+type).classList.remove('open');
+}
+
+// ── Mobile Food ──────────────────────────────────────
+let mSelectedFood = null;
+function clearMFoodForm(){
+  ['mf-kcal','mf-pro','mf-carb','mf-fat'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('mf-qty-row').style.display='none';
+  document.getElementById('mf-manual-row').style.display='block';
+  document.getElementById('mf-slot-row').style.display='none';
+  mSelectedFood=null;
+}
+function mFoodSearch(val){
+  const s=document.getElementById('mf-suggest');
+  if(!val||val.length<1){s.style.display='none';mSelectedFood=null;return;}
+  const matches=S.foodDb.filter(f=>f.name.toLowerCase().includes(val.toLowerCase()));
+  if(!matches.length){s.style.display='none';return;}
+  s.innerHTML=matches.slice(0,6).map(f=>`<div class="fs-item" onclick="mSelectFood('${f.id}')"><div>${f.name}</div><div class="fs-macros">100g: ${f.kcal}kcal · ${f.pro}g P · ${f.carb}g C · ${f.fat}g G</div></div>`).join('');
+  s.style.display='block';
+}
+function mSelectFood(id){
+  mSelectedFood=S.foodDb.find(f=>f.id===id);
+  if(!mSelectedFood) return;
+  document.getElementById('mf-name').value=mSelectedFood.name;
+  document.getElementById('mf-suggest').style.display='none';
+  document.getElementById('mf-qty-row').style.display='block';
+  document.getElementById('mf-manual-row').style.display='none';
+  document.getElementById('mf-slot-row').style.display='block';
+  document.getElementById('mf-qty-db').value=100;
+  calcMFoodFromDb();
+}
+function calcMFoodFromDb(){
+  if(!mSelectedFood) return;
+  const qty=parseFloat(document.getElementById('mf-qty-db').value)||100;
+  const f=qty/100;
+  document.getElementById('mf-kcal').value=Math.round(mSelectedFood.kcal*f);
+  document.getElementById('mf-pro').value=round2(mSelectedFood.pro*f);
+  document.getElementById('mf-carb').value=round2(mSelectedFood.carb*f);
+  document.getElementById('mf-fat').value=round2(mSelectedFood.fat*f);
+}
+function addFoodMobile(){
+  const name=document.getElementById('mf-name').value.trim();
+  const kcal=parseFloat(document.getElementById('mf-kcal').value)||0;
+  if(!name||!kcal){toast('⚠️ Inserisci nome e calorie',true);return;}
+  const slot=document.getElementById('mf-slot2').value||document.getElementById('mf-slot').value;
+  const qty=parseFloat(document.getElementById('mf-qty-db').value)||0;
+  getLog(curDate).nutrition.meals.push({
+    id:Date.now().toString(),name,kcal,
+    pro:round2(parseFloat(document.getElementById('mf-pro').value)||0),
+    carb:round2(parseFloat(document.getElementById('mf-carb').value)||0),
+    fat:round2(parseFloat(document.getElementById('mf-fat').value)||0),
+    qty,slot
+  });
+  save(); closeMModal('food'); toast('✅ '+name+' aggiunto!');
+  if(document.getElementById('s-nutrition').classList.contains('active')) renderNutr();
+  renderMDash();
+}
+// Wire scanner confirm for mobile diary context
+const _origConfirm = confirmScan;
+confirmScan = function(){
+  if(scannerCtx==='m-diary'){
+    if(!lastScannedFood) return;
+    const f=lastScannedFood;
+    closeScanner();
+    mSelectedFood={id:'_scan',name:f.name,kcal:f.kcal,pro:f.prot,carb:f.carb,fat:f.fat};
+    document.getElementById('mf-name').value=f.name;
+    document.getElementById('mf-qty-row').style.display='block';
+    document.getElementById('mf-manual-row').style.display='none';
+    document.getElementById('mf-slot-row').style.display='block';
+    document.getElementById('mf-qty-db').value=100;
+    calcMFoodFromDb();
+    if(!S.foodDb.find(x=>x.name===f.name)){
+      S.foodDb.push({id:Date.now().toString(),name:f.name,cat:mapCategory(f.category),kcal:f.kcal,pro:f.prot,carb:f.carb,fat:f.fat,fiber:f.fiber,barcode:f.barcode});
+      save();
+    }
+    openMModal('food');
+    toast('📷 '+f.name);
+  } else { _origConfirm(); }
+};
+
+// ── Mobile Water ────────────────────────────────────
+function renderMWater(){
+  const l=getLog(curDate),p=S.profile;
+  const wg=p.waterGoal||2500,gs=250,tg=Math.ceil(wg/gs),fg=Math.floor((l.nutrition.water||0)/gs);
+  let wh='<div class="water-track">';
+  for(let i=0;i<tg;i++) wh+=`<div class="wg ${i<fg?'full':''}" onclick="mToggleW(${i})"><div class="wg-fill"></div></div>`;
+  wh+=`</div><div style="font-size:13px;color:var(--text2);margin:8px 0">${l.nutrition.water}ml / ${wg}ml</div>`;
+  wh+=`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+    <button class="btn btn-ghost btn-sm" onclick="mAddW(125)">+125ml</button>
+    <button class="btn btn-ghost btn-sm" onclick="mAddW(250)">+250ml</button>
+    <button class="btn btn-ghost btn-sm" onclick="mAddW(500)">+500ml</button>
+    <button class="btn btn-ghost btn-sm" onclick="mAddW(-250)" style="color:var(--text3)">−250ml</button>
+  </div>
+  <div style="display:flex;gap:8px;align-items:flex-end">
+    <div style="flex:1"><label style="font-size:11px;margin-bottom:3px">ml manuali</label><input id="mw-manual" type="number" placeholder="350" min="0" style="padding:7px 10px;font-size:13px"></div>
+    <button class="btn btn-ghost btn-sm" onclick="mAddWManual()">+ Aggiungi</button>
+  </div>`;
+  document.getElementById('m-water-content').innerHTML=wh;
+}
+function mToggleW(i){const l=getLog(curDate),gs=250,fg=Math.floor((l.nutrition.water||0)/gs);l.nutrition.water=i<fg?i*gs:(i+1)*gs;save();renderMWater();renderMDash();}
+function mAddW(ml){const l=getLog(curDate);l.nutrition.water=Math.max(0,(l.nutrition.water||0)+ml);save();renderMWater();renderMDash();}
+function mAddWManual(){const v=parseInt(document.getElementById('mw-manual').value)||0;if(!v)return;const l=getLog(curDate);l.nutrition.water=Math.max(0,(l.nutrition.water||0)+v);save();renderMWater();renderMDash();}
+
+// ── Mobile Exercise ───────────────────────────────
+function addExerciseMobile(){
+  const name=document.getElementById('mex-name').value.trim();
+  const dur=parseFloat(document.getElementById('mex-dur').value)||0;
+  if(!name||!dur){toast('⚠️ Inserisci nome e durata',true);return;}
+  getLog(curDate).exercise.push({id:Date.now().toString(),name,dur,kcal:parseFloat(document.getElementById('mex-kcal').value)||0,type:document.getElementById('mex-type').value,intensity:document.getElementById('mex-int').value,time:'',notes:''});
+  save(); closeMModal('exercise'); toast('✅ Allenamento aggiunto!');
+  if(document.getElementById('s-exercise').classList.contains('active')) renderEx();
+  renderMDash();
+}
+
+// ── Mobile Steps ──────────────────────────────────
+function calcMStepsKcal(){
+  const steps=parseInt(document.getElementById('ms-steps').value)||0;
+  const sk=stepsKcal(steps,currentWeight(S.profile));
+  document.getElementById('ms-kcal-info').textContent=steps?`~${sk} kcal stimate`:'';
+  document.getElementById('ms-bar').style.width=Math.min(100,(steps/15000)*100)+'%';
+}
+function saveStepsMobile(){
+  const steps=parseInt(document.getElementById('ms-steps').value)||0;
+  getLog(curDate).steps=steps;
+  save(); closeMModal('steps'); toast('✅ Passi salvati!');
+  renderMDash();
+}
+
+// ── Mobile Sleep ──────────────────────────────────
+let mSleepQ=4;
+function setMQ(q){mSleepQ=q;updMQ();}
+function updMQ(){document.querySelectorAll('#msl-quality .qs-item').forEach((el,i)=>el.classList.toggle('sel',i+1===mSleepQ));}
+function calcMSl(){
+  const s=document.getElementById('msl-start').value,e=document.getElementById('msl-end').value;
+  if(!s||!e) return 0;
+  const[sh,sm]=s.split(':').map(Number),[eh,em]=e.split(':').map(Number);
+  let mins=(eh*60+em)-(sh*60+sm);if(mins<0)mins+=1440;
+  const h=parseFloat((mins/60).toFixed(1));
+  document.getElementById('msl-calc').textContent=h+'h';
+  const goal=S.profile.sleepGoal||8,diff=(h-goal).toFixed(1);
+  const vs=document.getElementById('msl-vs');
+  if(vs){vs.textContent=(+diff>=0?'+':'')+diff+'h vs obiettivo';vs.style.color=+diff>=0?'var(--green)':'var(--red)';}
+  return h;
+}
+function saveSleepMobile(){
+  const hours=calcMSl()||0;
+  getLog(curDate).sleep={hours,bedtime:document.getElementById('msl-start').value,wakeup:document.getElementById('msl-end').value,quality:mSleepQ,notes:'',interruptions:0};
+  save(); closeMModal('sleep'); toast('✅ Sonno salvato!');
+  renderMDash();
+}
+
+// ── Sonno+NEAT combined section ───────────────────
+let snQ=4;
+function setSnQ(q){snQ=q;document.querySelectorAll('#sn-quality .qs-item').forEach((el,i)=>el.classList.toggle('sel',i+1===snQ));}
+function calcSn(){
+  const s=document.getElementById('sn-start').value,e=document.getElementById('sn-end').value;
+  if(!s||!e) return 0;
+  const[sh,sm]=s.split(':').map(Number),[eh,em]=e.split(':').map(Number);
+  let mins=(eh*60+em)-(sh*60+sm);if(mins<0)mins+=1440;
+  const h=parseFloat((mins/60).toFixed(1));
+  document.getElementById('sn-calc').textContent=h+'h';
+  const goal=S.profile.sleepGoal||8,diff=(h-goal).toFixed(1);
+  const vs=document.getElementById('sn-vs');
+  if(vs){vs.textContent=(+diff>=0?'+':'')+diff+'h vs obiettivo';vs.style.color=+diff>=0?'var(--green)':'var(--red)';}
+  return h;
+}
+function saveSnSleep(){
+  const hours=calcSn()||0;
+  getLog(curDate).sleep={hours,bedtime:document.getElementById('sn-start').value,wakeup:document.getElementById('sn-end').value,quality:snQ,notes:'',interruptions:0};
+  save(); toast('✅ Sonno salvato!'); renderMDash();
+}
+function calcSnSteps(){
+  const steps=parseInt(document.getElementById('sn-steps').value)||0;
+  const sk=stepsKcal(steps,currentWeight(S.profile));
+  document.getElementById('sn-steps-bar').style.width=Math.min(100,(steps/15000)*100)+'%';
+  document.getElementById('sn-steps-info').textContent=steps?`${steps.toLocaleString('it-IT')} passi · ~${sk} kcal · ${Math.round(steps/10000*100)}% obiettivo`:'';
+}
+function saveSnSteps(){
+  const steps=parseInt(document.getElementById('sn-steps').value)||0;
+  getLog(curDate).steps=steps;
+  save(); toast('✅ Passi salvati!'); renderMDash();
+}
+function calcSnNeat(){
+  const type=document.getElementById('sn-neat-type').value;
+  const dur=parseFloat(document.getElementById('sn-neat-dur').value)||0;
+  const met=NEAT_DATA[type]?NEAT_DATA[type].met:2.5;
+  const w=currentWeight(S.profile);
+  document.getElementById('sn-neat-kcal').value=Math.round(met*w*(dur/60));
+}
+function addSnNeat(){
+  const dur=parseFloat(document.getElementById('sn-neat-dur').value)||0;
+  if(!dur){toast('⚠️ Inserisci la durata',true);return;}
+  const type=document.getElementById('sn-neat-type').value;
+  const kcal=parseFloat(document.getElementById('sn-neat-kcal').value)||0;
+  const name=NEAT_DATA[type]?NEAT_DATA[type].label:'Attività';
+  const l=getLog(curDate);
+  const steps=l.steps||0;
+  const w=currentWeight(S.profile);
+  getLog(curDate).neat.push({id:Date.now().toString(),name,dur,kcal:neatEffectiveKcal({type,dur,kcal},steps,w),type});
+  save();
+  document.getElementById('sn-neat-dur').value='';
+  document.getElementById('sn-neat-kcal').value='';
+  toast('✅ NEAT aggiunto!');
+  renderSnNeatLog();
+  renderMDash();
+}
+function renderSnNeatLog(){
+  const l=getLog(curDate);
+  const el=document.getElementById('sn-neat-log');
+  if(!el) return;
+  if(!l.neat.length){el.innerHTML='<div style="font-size:12px;color:var(--text3)">Nessuna attività</div>';return;}
+  el.innerHTML=l.neat.map(n=>`<div class="li"><div class="li-info"><h4>${n.name}</h4><p>${n.dur}min</p></div><div class="li-meta"><span class="kcal">${n.kcal} kcal</span></div></div>`).join('');
+}
+function renderSleepNeat(){
+  document.getElementById('sn-date-label').textContent=fmtDate(curDate);
+  const l=getLog(curDate),sl=l.sleep;
+  document.getElementById('sn-start').value=sl.bedtime||'23:00';
+  document.getElementById('sn-end').value=sl.wakeup||'07:00';
+  snQ=sl.quality||4;
+  document.querySelectorAll('#sn-quality .qs-item').forEach((el,i)=>el.classList.toggle('sel',i+1===snQ));
+  calcSn();
+  document.getElementById('sn-steps').value=l.steps||'';
+  calcSnSteps();
+  renderSnNeatLog();
+}
+
+// ── Mobile Dashboard ──────────────────────────────
+function renderMDash(){
+  if(!isMobile()) return;
+  const l=getLog(curDate),p=S.profile;
+  const tk=targetKcal(p)||2000;
+  const cons=l.nutrition.meals.reduce((s,m)=>s+(m.kcal||0),0);
+  const exK=l.exercise.reduce((s,e)=>s+(e.kcal||0),0);
+  const w=currentWeight(p);
+  const ntK=l.neat.reduce((s,n)=>s+neatEffectiveKcal(n,l.steps||0,w),0)+stepsKcal(l.steps||0,w);
+  const mg=macroGoals(tk,p);
+  const totP=round2(l.nutrition.meals.reduce((s,m)=>s+(m.pro||0),0));
+  const totC=round2(l.nutrition.meals.reduce((s,m)=>s+(m.carb||0),0));
+  const totF=round2(l.nutrition.meals.reduce((s,m)=>s+(m.fat||0),0));
+  const wg=p.waterGoal||2500;
+  const rem=tk-cons+exK;
+
+  // Build mobile dashboard HTML
+  const dash=document.getElementById('s-dashboard');
+  // Check if mobile dash div exists
+  let mDiv=document.getElementById('m-dash-content');
+  if(!mDiv){
+    mDiv=document.createElement('div');
+    mDiv.id='m-dash-content';
+    dash.appendChild(mDiv);
+  }
+
+  mDiv.innerHTML=`
+    <div style="font-size:12px;color:var(--text3);margin-bottom:10px;text-align:center">${fmtDate(curDate)}</div>
+
+    <!-- Ring + KPI -->
+    <div class="m-ring-row">
+      <div class="m-ring-wrap">
+        <canvas id="m-ring-c" width="110" height="110"></canvas>
+        <div class="m-ring-center">
+          <div class="m-ring-val" style="color:${rem>=0?'var(--amber)':'var(--red)'}">${Math.abs(rem)}</div>
+          <div class="m-ring-lbl">${rem>=0?'kcal rimaste':'kcal eccesso'}</div>
+        </div>
+      </div>
+      <div class="m-kpi-grid">
+        <div class="m-kpi"><div class="m-kpi-val" style="color:var(--amber)">${cons}</div><div class="m-kpi-lbl">kcal assunte</div></div>
+        <div class="m-kpi"><div class="m-kpi-val" style="color:var(--blue)">${l.nutrition.water}<span style="font-size:11px;font-weight:400">ml</span></div><div class="m-kpi-lbl">acqua</div></div>
+        <div class="m-kpi"><div class="m-kpi-val" style="color:var(--green)">${exK+ntK}</div><div class="m-kpi-lbl">kcal bruciate</div></div>
+        <div class="m-kpi"><div class="m-kpi-val" style="color:var(--purple)">${l.sleep.hours||0}<span style="font-size:11px;font-weight:400">h</span></div><div class="m-kpi-lbl">sonno</div></div>
+      </div>
+    </div>
+
+    <!-- Macro bars -->
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-title" style="margin-bottom:10px">Macro di oggi</div>
+      <div class="m-prog-row"><div class="m-prog-lbl">Proteine</div><div class="m-prog-bar"><div class="m-prog-fill" style="width:${Math.min(100,totP/(mg.p||1)*100).toFixed(1)}%;background:var(--purple)"></div></div><div class="m-prog-val">${totP}/${mg.p}g</div></div>
+      <div class="m-prog-row"><div class="m-prog-lbl">Carboidrati</div><div class="m-prog-bar"><div class="m-prog-fill" style="width:${Math.min(100,totC/(mg.c||1)*100).toFixed(1)}%;background:var(--amber)"></div></div><div class="m-prog-val">${totC}/${mg.c}g</div></div>
+      <div class="m-prog-row" style="margin:0"><div class="m-prog-lbl">Grassi</div><div class="m-prog-bar"><div class="m-prog-fill" style="width:${Math.min(100,totF/(mg.f||1)*100).toFixed(1)}%;background:var(--green)"></div></div><div class="m-prog-val">${totF}/${mg.f}g</div></div>
+    </div>
+
+    <!-- Quick actions -->
+    <div style="font-size:11px;color:var(--text3);margin-bottom:6px;letter-spacing:.5px">ACCESSO RAPIDO</div>
+    <div class="m-quick-row">
+      <div class="m-qa" onclick="fabAction('food')">🍽 Aggiungi pasto</div>
+      <div class="m-qa" onclick="fabAction('water')">💧 Acqua</div>
+      <div class="m-qa" onclick="fabAction('exercise')">💪 Allenamento</div>
+      <div class="m-qa" onclick="fabAction('steps')">👟 Passi</div>
+      <div class="m-qa" onclick="fabAction('sleep')">😴 Sonno</div>
+    </div>
+
+    <!-- Today's meals compact -->
+    ${l.nutrition.meals.length>0?`
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-title">Pasti di oggi</div>
+      ${l.nutrition.meals.slice(-5).map(m=>`
+        <div class="li" style="padding:8px 0">
+          <div class="li-info"><h4 style="font-size:13px">${m.name}</h4></div>
+          <div class="li-meta"><span class="kcal" style="font-size:12px">${m.kcal} kcal</span></div>
+        </div>`).join('')}
+    </div>`:''}
+
+    <!-- Steps bar -->
+    ${l.steps?`<div class="card" style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-size:13px;font-weight:600">👟 ${(l.steps||0).toLocaleString('it-IT')} passi</div>
+        <div style="font-size:12px;color:var(--text3)">${Math.round((l.steps||0)/10000*100)}%</div>
+      </div>
+      <div style="height:5px;background:var(--bg4);border-radius:3px;overflow:hidden"><div style="height:100%;background:var(--blue);width:${Math.min(100,(l.steps||0)/10000*100).toFixed(1)}%"></div></div>
+    </div>`:''}
+  `;
+
+  // Draw mini ring
+  requestAnimationFrame(()=>{
+    const c=document.getElementById('m-ring-c');
+    if(!c) return;
+    destroyChart('mring');
+    charts['mring']=new Chart(c.getContext('2d'),{
+      type:'doughnut',
+      data:{datasets:[{data:cons>0?[cons,Math.max(0,tk-cons)]:[1,tk-1],
+        backgroundColor:cons>tk?['var(--red)','var(--bg4)']:['var(--amber)','var(--bg4)'],borderWidth:0}]},
+      options:{cutout:'72%',responsive:false,animation:{duration:400},plugins:{legend:{display:false},tooltip:{enabled:false}}}
+    });
+  });
+}
+
+// ── Patch renderSection for mobile ─────────────────
+const _origRenderSection = renderSection;
+renderSection = function(s){
+  if(s==='sleepneat'){ renderSleepNeat(); return; }
+  _origRenderSection(s);
+  if(isMobile() && s==='dashboard') renderMDash();
+};
+
+// ── Hide desktop-only elements on mobile dash ──────
+// The existing desktop dashboard content is hidden on mobile via CSS
+// Mobile dash content is rendered into #m-dash-content
+
+// Init mobile on resize
+window.addEventListener('resize', ()=>{
+  const active=document.querySelector('.section.active');
+  if(active && isMobile()){
+    if(active.id==='s-dashboard') renderMDash();
+    syncBottomNav(active.id.replace('s-',''));
+  }
+});
 
 // ════════════════════════════════════════════════════════════
 // PWA — SERVICE WORKER + INSTALL PROMPT
