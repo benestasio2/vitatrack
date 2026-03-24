@@ -1939,9 +1939,9 @@ async function startLiveCamera(){
   if(nativeDetector){
     liveNativeScan(video);
   } else {
-    // No live decoder available on this browser → photo mode
-    stopLiveCamera();
-    showPhotoMode('Il tuo browser non supporta la lettura live del barcode.\nScatta una foto del barcode oppure inserisci il codice manualmente.');
+    // Camera is live but no auto-decoder — keep video, show capture button
+    setStatus('Inquadra il barcode e premi il pulsante Cattura', '');
+    showCaptureButton();
   }
 }
 
@@ -1969,6 +1969,61 @@ function liveNativeScan(video){
     }
   }
   liveRafId = requestAnimationFrame(tick);
+}
+
+function showCaptureButton(){
+  // Remove any existing capture btn
+  const old = document.getElementById('live-capture-btn');
+  if(old) old.remove();
+  const btn = document.createElement('button');
+  btn.id = 'live-capture-btn';
+  btn.textContent = '📸 Cattura e leggi barcode';
+  btn.className = 'btn btn-primary';
+  btn.style.cssText = 'font-family:"DM Sans",sans-serif;margin-top:10px;font-size:14px';
+  btn.onclick = captureFrame;
+  // Insert after scanner-wrap
+  const wrap = document.getElementById('scanner-wrap');
+  wrap.parentNode.insertBefore(btn, wrap.nextSibling);
+}
+
+async function captureFrame(){
+  const video = document.getElementById('scanner-video');
+  if(!video || !scannerStream){
+    setStatus('⚠️ Fotocamera non attiva', 'var(--red)');
+    return;
+  }
+  setStatus('Analisi frame in corso...', 'var(--amber)');
+
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth || 640;
+  canvas.height = video.videoHeight || 480;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0);
+
+  let barcode = null;
+
+  // Try to init detector now if still missing
+  if(hasBarcodeDetector && !nativeDetector){
+    try {
+      const fmts = await BarcodeDetector.getSupportedFormats();
+      const wanted = ['ean_13','ean_8','upc_a','upc_e','code_128','code_39','qr_code'];
+      const use = wanted.filter(f => fmts.includes(f));
+      nativeDetector = new BarcodeDetector({ formats: use.length ? use : fmts });
+    } catch(e){ try { nativeDetector = new BarcodeDetector(); } catch(e2){} }
+  }
+
+  if(nativeDetector){
+    try {
+      const codes = await nativeDetector.detect(canvas);
+      if(codes && codes.length > 0) barcode = codes[0].rawValue;
+    } catch(e){}
+  }
+
+  if(barcode){
+    onBarcodeDetected(barcode);
+  } else {
+    setStatus('⚠️ Nessun barcode rilevato. Avvicina il prodotto, assicurati che il barcode sia centrato e ben illuminato, poi riprova.', 'var(--amber)');
+  }
 }
 
 function stopLiveCamera(){
@@ -2134,18 +2189,22 @@ function resumeScan(){
   ['scan-capture-input','scan-gallery-input'].forEach(id => {
     const el = document.getElementById(id); if(el) el.value = '';
   });
-  // If live was active, restart it
+  const btn = document.getElementById('live-capture-btn');
+  if(btn) btn.remove();
   if(document.getElementById('scan-live').style.display !== 'none'){
     scannerActive = true;
     const video = document.getElementById('scanner-video');
-    if(scannerStream && video.srcObject && nativeDetector){
-      liveNativeScan(video);
+    if(scannerStream && video.srcObject){
+      if(nativeDetector) liveNativeScan(video);
+      else showCaptureButton();
     }
   }
 }
 
 function closeScanner(){
   stopLiveCamera();
+  const btn = document.getElementById('live-capture-btn');
+  if(btn) btn.remove();
   document.getElementById('scanner-overlay').classList.remove('open');
   document.getElementById('scanner-result').style.display = 'none';
   document.getElementById('scan-live').style.display = 'none';
