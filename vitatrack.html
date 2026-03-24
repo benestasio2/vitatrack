@@ -430,7 +430,7 @@ textarea{resize:vertical;min-height:60px}
     <div id="mf-manual-row">
       <div class="fr">
         <div class="fg"><label>Calorie (kcal)</label><input id="mf-kcal" type="number" placeholder="400" min="0"></div>
-        <div class="fg"><label>Pasto</label><select id="mf-slot"><option value="breakfast">🌅 Colazione</option><option value="lunch">☀️ Pranzo</option><option value="dinner">🌙 Cena</option><option value="snack">🍪 Snack</option></select></div>
+        <div class="fg"><label>Pasto</label><select id="mf-slot"><option value="breakfast">🌅 Colazione</option><option value="lunch">☀️ Pranzo</option><option value="snack">🍪 Spuntino</option><option value="dinner">🌙 Cena</option></select></div>
       </div>
       <div class="fr">
         <div class="fg"><label>Proteine (g)</label><input id="mf-pro" type="number" placeholder="15" min="0" step="0.1"></div>
@@ -440,7 +440,7 @@ textarea{resize:vertical;min-height:60px}
     </div>
     <div id="mf-slot-row" style="display:none" class="fg">
       <label>Pasto</label>
-      <select id="mf-slot2"><option value="breakfast">🌅 Colazione</option><option value="lunch">☀️ Pranzo</option><option value="dinner">🌙 Cena</option><option value="snack">🍪 Snack</option></select>
+      <select id="mf-slot2"><option value="breakfast">🌅 Colazione</option><option value="lunch">☀️ Pranzo</option><option value="snack">🍪 Spuntino</option><option value="dinner">🌙 Cena</option></select>
     </div>
     <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="addFoodMobile()">+ Aggiungi</button>
   </div>
@@ -492,8 +492,16 @@ textarea{resize:vertical;min-height:60px}
   </div>
 </div>
 
-<!-- Sleep quick add -->
-<div class="m-modal" id="m-modal-sleep">
+<!-- Weight quick add -->
+<div class="m-modal" id="m-modal-weight">
+  <div class="m-modal-hd"><h2>⚖️ Registra Peso</h2><button class="m-modal-close" onclick="closeMModal('weight')">×</button></div>
+  <div class="m-modal-body">
+    <div class="fg"><label>Data</label><input id="mw-date" type="date"></div>
+    <div class="fg"><label>Peso (kg)</label><input id="mw-kg" type="number" placeholder="70.5" step="0.1" min="30" max="300"></div>
+    <div id="mw-prev" style="font-size:12.5px;color:var(--text2);margin-bottom:14px"></div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="addWeightMobile()">💾 Salva Misurazione</button>
+  </div>
+</div>
   <div class="m-modal-hd"><h2>😴 Sonno</h2><button class="m-modal-close" onclick="closeMModal('sleep')">×</button></div>
   <div class="m-modal-body">
     <div class="fr">
@@ -745,11 +753,12 @@ textarea{resize:vertical;min-height:60px}
 
   <!-- DIARY -->
   <div id="n-tab-diary">
-    <div class="sg" id="n-stats"></div>
+    <!-- Desktop: top stat cards -->
+    <div class="sg desktop-only" id="n-stats"></div>
     <div class="g2">
       <div>
         <div id="n-slots"></div>
-        <div class="card" style="margin-top:10px">
+        <div class="card desktop-only" style="margin-top:10px">
           <div class="card-title">+ Aggiungi Alimento al Diario</div>
           <div class="fr">
             <div class="fg food-suggest">
@@ -759,13 +768,13 @@ textarea{resize:vertical;min-height:60px}
                   <input id="f-name" type="text" placeholder="Cerca o inserisci..." autocomplete="off" oninput="foodSearch(this.value)" onfocus="foodSearch(this.value)">
                   <div class="fs-list" id="f-suggest"></div>
                 </div>
-                <button class="btn btn-ghost btn-sm" onclick="openScanner('diary')" title="Scansiona codice a barre" style="flex-shrink:0;padding:0 12px;font-size:18px" id="scan-diary-btn">📷</button>
+                <button class="btn btn-ghost btn-sm" onclick="openScanner('diary')" title="Scansiona" style="flex-shrink:0;padding:0 12px;font-size:18px" id="scan-diary-btn">📷</button>
               </div>
             </div>
-            <div class="fg"><label>Pasto</label><select id="f-slot"><option value="breakfast">🌅 Colazione</option><option value="lunch">☀️ Pranzo</option><option value="dinner">🌙 Cena</option><option value="snack">🍪 Snack</option></select></div>
+            <div class="fg"><label>Pasto</label><select id="f-slot"><option value="breakfast">🌅 Colazione</option><option value="lunch">☀️ Pranzo</option><option value="snack">🍪 Spuntino</option><option value="dinner">🌙 Cena</option></select></div>
           </div>
           <div id="f-qty-row" style="display:none" class="fg">
-            <label>Quantità (g) — macro calcolati in automatico dal database</label>
+            <label>Quantità (g)</label>
             <input id="f-qty-db" type="number" placeholder="100" min="0" step="1" oninput="calcFoodFromDb()">
           </div>
           <div class="fr3" id="f-manual-row">
@@ -785,14 +794,19 @@ textarea{resize:vertical;min-height:60px}
         </div>
       </div>
       <div>
-        <div class="card" style="margin-bottom:12px">
+        <div class="card desktop-only" style="margin-bottom:12px">
           <div class="card-title">💧 Idratazione</div>
           <div id="n-water"></div>
         </div>
-        <div class="card">
+        <div class="card desktop-only">
           <div class="card-title">Distribuzione Macros</div>
           <div class="cw-sm"><canvas id="mac-pie"></canvas></div>
           <div id="n-mbars" style="margin-top:12px"></div>
+        </div>
+        <!-- Mobile: macro summary bar shown at bottom -->
+        <div class="card mobile-only" style="display:none;margin-top:10px" id="n-macro-bar-mobile">
+          <div class="card-title">Riepilogo Macro</div>
+          <div id="n-mbars-mobile"></div>
         </div>
       </div>
     </div>
@@ -801,7 +815,7 @@ textarea{resize:vertical;min-height:60px}
       <div class="card-title">Aggiungi Ricetta al Pasto</div>
       <div class="fr">
         <div class="fg"><label>Ricetta</label><select id="rtm-rec"><option value="">— Seleziona —</option></select></div>
-        <div class="fg"><label>Pasto</label><select id="rtm-slot"><option value="breakfast">🌅 Colazione</option><option value="lunch">☀️ Pranzo</option><option value="dinner">🌙 Cena</option><option value="snack">🍪 Snack</option></select></div>
+        <div class="fg"><label>Pasto</label><select id="rtm-slot"><option value="breakfast">🌅 Colazione</option><option value="lunch">☀️ Pranzo</option><option value="snack">🍪 Spuntino</option><option value="dinner">🌙 Cena</option></select></div>
       </div>
       <div id="rtm-preview" style="font-size:12px;color:var(--text2);margin-bottom:10px"></div>
       <div style="display:flex;gap:8px">
@@ -873,7 +887,7 @@ textarea{resize:vertical;min-height:60px}
       <div class="card">
         <div class="card-title">+ Crea Nuova Ricetta</div>
         <div class="fg"><label>Nome Ricetta</label><input id="rc-name" type="text" placeholder="es. Porridge mattutino"></div>
-        <div class="fg"><label>Categoria</label><select id="rc-cat"><option value="breakfast">🌅 Colazione</option><option value="lunch">☀️ Pranzo</option><option value="dinner">🌙 Cena</option><option value="snack">🍪 Snack</option></select></div>
+        <div class="fg"><label>Categoria</label><select id="rc-cat"><option value="breakfast">🌅 Colazione</option><option value="lunch">☀️ Pranzo</option><option value="snack">🍪 Spuntino</option><option value="dinner">🌙 Cena</option></select></div>
         <div class="fg"><label>Aggiungi Ingrediente dal Database</label>
           <div class="food-suggest">
             <input id="rc-ing-name" type="text" placeholder="Cerca alimento..." autocomplete="off" oninput="recSearch(this.value)">
@@ -1045,6 +1059,10 @@ textarea{resize:vertical;min-height:60px}
         Ore: <span id="sn-calc" style="color:var(--purple);font-weight:700">8.0h</span>
         <span id="sn-vs" style="font-size:11px;color:var(--text3);margin-left:8px"></span>
       </div>
+      <div class="fg">
+        <label>Ore dirette (se non usi orari)</label>
+        <input id="sn-hours-direct" type="number" placeholder="es. 7.5" min="0" max="24" step="0.5" oninput="syncSnHours()">
+      </div>
       <div class="fg"><label>Qualità</label>
         <div class="qs" id="sn-quality">
           <div class="qs-item" onclick="setSnQ(1)">😫</div>
@@ -1053,6 +1071,9 @@ textarea{resize:vertical;min-height:60px}
           <div class="qs-item sel" onclick="setSnQ(4)">🙂</div>
           <div class="qs-item" onclick="setSnQ(5)">😊</div>
         </div>
+      </div>
+      <div class="fg"><label>Interruzioni</label>
+        <select id="sn-inter"><option value="0">Nessuna</option><option value="1">1–2 volte</option><option value="2">3–4 volte</option><option value="3">Molte volte</option></select>
       </div>
       <button class="btn btn-primary btn-sm" style="width:100%;justify-content:center" onclick="saveSnSleep()">💾 Salva Sonno</button>
     </div>
@@ -1181,7 +1202,7 @@ const WALK_BASE_MET = 2.0; // baseline walking MET already represented by steps
 // round to 2 decimal places — avoids JS float artifacts
 function round2(n){ return Math.round(n*100)/100; }
 function round1(n){ return Math.round(n*10)/10; }
-const SLOTS=[{k:'breakfast',label:'🌅 Colazione'},{k:'lunch',label:'☀️ Pranzo'},{k:'dinner',label:'🌙 Cena'},{k:'snack',label:'🍪 Snack'}];
+const SLOTS=[{k:'breakfast',label:'🌅 Colazione'},{k:'lunch',label:'☀️ Pranzo'},{k:'snack',label:'🍪 Spuntino'},{k:'dinner',label:'🌙 Cena'}];
 const CO={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
   scales:{x:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#506070',font:{size:11}}},
           y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#506070',font:{size:11}},beginAtZero:true}}};
@@ -1692,6 +1713,7 @@ function renderNutr(){
   const totP=round2(l.nutrition.meals.reduce((s,m)=>s+(m.pro||0),0));
   const totC=round2(l.nutrition.meals.reduce((s,m)=>s+(m.carb||0),0));
   const totF=round2(l.nutrition.meals.reduce((s,m)=>s+(m.fat||0),0));
+  // Desktop stat cards
   document.getElementById('n-stats').innerHTML=`
     <div class="sc a"><div class="sc-label">CALORIE</div><div class="sc-val">${cons}</div><div class="sc-sub">/ ${tk} kcal</div><div class="pb"><div class="pf" style="width:${Math.min(100,cons/tk*100).toFixed(1)}%;background:var(--amber)"></div></div></div>
     <div class="sc v"><div class="sc-label">PROTEINE</div><div class="sc-val">${totP}g</div><div class="sc-sub">/ ${mg.p}g</div><div class="pb"><div class="pf" style="width:${Math.min(100,totP/(mg.p||1)*100).toFixed(1)}%;background:var(--purple)"></div></div></div>
@@ -1702,21 +1724,39 @@ function renderNutr(){
   for(const sl of SLOTS){
     const meals=l.nutrition.meals.filter(m=>m.slot===sl.k);
     const slK=meals.reduce((s,m)=>s+(m.kcal||0),0);
-    shtml+=`<div class="ms"><div class="ms-hd"><div class="ms-title">${sl.label}</div><div class="ms-kcal">${slK} kcal</div></div>`;
+    shtml+=`<div class="ms">
+      <div class="ms-hd">
+        <div class="ms-title">${sl.label}</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="ms-kcal">${slK} kcal</div>
+          <button onclick="openSlotAdd('${sl.k}')" style="width:26px;height:26px;border-radius:50%;background:var(--amber-dim);border:1px solid var(--amber-border);color:var(--amber);font-size:18px;line-height:1;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent">+</button>
+        </div>
+      </div>`;
     if(meals.length){shtml+=meals.map(m=>`<div class="li"><div class="li-info"><h4>${m.name}</h4><p>${m.pro||0}g P · ${m.carb||0}g C · ${m.fat||0}g G${m.qty?' · '+m.qty+'g':''}</p></div><div class="li-meta"><span class="kcal">${m.kcal} kcal</span><button class="btn-icon" onclick="rmFood('${m.id}')">×</button></div></div>`).join('');}
     else shtml+=`<div style="font-size:12px;color:var(--text3);padding:4px 0">Nessun alimento</div>`;
     shtml+='</div>';
   }
   document.getElementById('n-slots').innerHTML=shtml;
-  // Water
+  // Water (desktop only)
   renderWater();
-  // Macro pie
-  destroyChart('mpie');
-  charts['mpie']=new Chart(document.getElementById('mac-pie').getContext('2d'),{
-    type:'doughnut',data:{labels:['Proteine','Carboidrati','Grassi'],datasets:[{data:[totP*4||1,totC*4||1,totF*9||1],backgroundColor:['rgba(155,113,245,.8)','rgba(245,166,35,.8)','rgba(34,199,144,.8)'],borderWidth:0}]},
-    options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{display:true,position:'bottom',labels:{color:'#8899af',font:{size:11},boxWidth:10,padding:10}}}}
-  });
-  document.getElementById('n-mbars').innerHTML=mkMacroBars(totP,totC,totF,mg);
+  // Macro pie (desktop only — skip if mobile)
+  if(!isMobile()){
+    destroyChart('mpie');
+    charts['mpie']=new Chart(document.getElementById('mac-pie').getContext('2d'),{
+      type:'doughnut',data:{labels:['Proteine','Carboidrati','Grassi'],datasets:[{data:[totP*4||1,totC*4||1,totF*9||1],backgroundColor:['rgba(155,113,245,.8)','rgba(245,166,35,.8)','rgba(34,199,144,.8)'],borderWidth:0}]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{display:true,position:'bottom',labels:{color:'#8899af',font:{size:11},boxWidth:10,padding:10}}}}
+    });
+    document.getElementById('n-mbars').innerHTML=mkMacroBars(totP,totC,totF,mg);
+  } else {
+    // Mobile: show macro bar at bottom
+    const mbar=document.getElementById('n-macro-bar-mobile');
+    if(mbar){
+      mbar.style.display='block';
+      document.getElementById('n-mbars-mobile').innerHTML=
+        `<div style="font-size:13px;color:var(--text2);margin-bottom:10px">Totale giornata: <b style="color:var(--amber)">${cons} kcal</b> / ${tk} kcal</div>`+
+        mkMacroBars(totP,totC,totF,mg);
+    }
+  }
 }
 function renderWater(){
   const l=getLog(curDate),p=S.profile;
@@ -2281,27 +2321,36 @@ async function startLiveCamera(){
 }
 
 function liveNativeScan(video){
-  const canvas = document.createElement('canvas');
-  const ctx2d = canvas.getContext('2d');
   function tick(){
     if(!scannerActive || !nativeDetector) return;
-    if(video.readyState >= 2 && video.videoWidth > 0){
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      ctx2d.drawImage(video, 0, 0);
-      nativeDetector.detect(canvas)
-        .then(codes => {
-          if(!scannerActive) return;
-          if(codes && codes.length > 0){
-            onBarcodeDetected(codes[0].rawValue);
-          } else {
-            liveRafId = requestAnimationFrame(tick);
-          }
-        })
-        .catch(() => { liveRafId = requestAnimationFrame(tick); });
-    } else {
-      liveRafId = requestAnimationFrame(tick);
-    }
+    // Detect directly from video — more reliable than canvas on mobile
+    nativeDetector.detect(video)
+      .then(codes => {
+        if(!scannerActive) return;
+        if(codes && codes.length > 0){
+          onBarcodeDetected(codes[0].rawValue);
+        } else {
+          liveRafId = requestAnimationFrame(tick);
+        }
+      })
+      .catch(() => {
+        // Some browsers don't support detect(video), fall back to canvas
+        if(video.readyState >= 2 && video.videoWidth > 0){
+          const canvas = document.createElement('canvas');
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          canvas.getContext('2d').drawImage(video, 0, 0);
+          nativeDetector.detect(canvas)
+            .then(codes => {
+              if(!scannerActive) return;
+              if(codes && codes.length > 0) onBarcodeDetected(codes[0].rawValue);
+              else liveRafId = requestAnimationFrame(tick);
+            })
+            .catch(() => { liveRafId = requestAnimationFrame(tick); });
+        } else {
+          liveRafId = requestAnimationFrame(tick);
+        }
+      });
   }
   liveRafId = requestAnimationFrame(tick);
 }
@@ -2323,21 +2372,10 @@ function showCaptureButton(){
 
 async function captureFrame(){
   const video = document.getElementById('scanner-video');
-  if(!video || !scannerStream){
-    setStatus('⚠️ Fotocamera non attiva', 'var(--red)');
-    return;
-  }
-  setStatus('Analisi frame in corso...', 'var(--amber)');
+  if(!video || !scannerStream){ setStatus('⚠️ Fotocamera non attiva', 'var(--red)'); return; }
+  setStatus('Analisi in corso...', 'var(--amber)');
 
-  const canvas = document.createElement('canvas');
-  canvas.width = video.videoWidth || 640;
-  canvas.height = video.videoHeight || 480;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(video, 0, 0);
-
-  let barcode = null;
-
-  // Try to init detector now if still missing
+  // Init detector if still missing
   if(hasBarcodeDetector && !nativeDetector){
     try {
       const fmts = await BarcodeDetector.getSupportedFormats();
@@ -2347,8 +2385,26 @@ async function captureFrame(){
     } catch(e){ try { nativeDetector = new BarcodeDetector(); } catch(e2){} }
   }
 
-  if(nativeDetector){
+  if(!nativeDetector){
+    setStatus('⚠️ Rilevamento non supportato su questo browser. Usa il campo manuale.', 'var(--amber)');
+    return;
+  }
+
+  let barcode = null;
+
+  // Try detect(video) directly first
+  try {
+    const codes = await nativeDetector.detect(video);
+    if(codes && codes.length > 0) barcode = codes[0].rawValue;
+  } catch(e){}
+
+  // Fallback to canvas if video detection not supported
+  if(!barcode){
     try {
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth || 640;
+      canvas.height = video.videoHeight || 480;
+      canvas.getContext('2d').drawImage(video, 0, 0);
       const codes = await nativeDetector.detect(canvas);
       if(codes && codes.length > 0) barcode = codes[0].rawValue;
     } catch(e){}
@@ -2357,7 +2413,7 @@ async function captureFrame(){
   if(barcode){
     onBarcodeDetected(barcode);
   } else {
-    setStatus('⚠️ Nessun barcode rilevato. Avvicina il prodotto, assicurati che il barcode sia centrato e ben illuminato, poi riprova.', 'var(--amber)');
+    setStatus('⚠️ Nessun barcode. Avvicina il prodotto, assicurati che il barcode sia ben illuminato e centrato, poi riprova.', 'var(--amber)');
   }
 }
 
@@ -2380,16 +2436,6 @@ async function handleImageFile(input){
   const url = URL.createObjectURL(file);
 
   img.onload = async () => {
-    URL.revokeObjectURL(url);
-    const canvas = document.getElementById('scanner-canvas');
-    canvas.width = img.naturalWidth;
-    canvas.height = img.naturalHeight;
-    const ctx2d = canvas.getContext('2d');
-    ctx2d.drawImage(img, 0, 0);
-
-    let barcode = null;
-
-    // Init detector if not yet done
     if(hasBarcodeDetector && !nativeDetector){
       try {
         const fmts = await BarcodeDetector.getSupportedFormats();
@@ -2398,31 +2444,26 @@ async function handleImageFile(input){
         nativeDetector = new BarcodeDetector({ formats: use.length ? use : fmts });
       } catch(e){ try { nativeDetector = new BarcodeDetector(); } catch(e2){} }
     }
-
-    // Try native BarcodeDetector
+    let barcode = null;
     if(nativeDetector){
-      try {
-        const codes = await nativeDetector.detect(canvas);
-        if(codes && codes.length > 0) barcode = codes[0].rawValue;
-      } catch(e){}
+      // Try detect on img element directly
+      try { const c=await nativeDetector.detect(img); if(c&&c.length) barcode=c[0].rawValue; } catch(e){}
+      // Fallback: canvas
+      if(!barcode){
+        try {
+          const cv=document.getElementById('scanner-canvas');
+          cv.width=img.naturalWidth; cv.height=img.naturalHeight;
+          cv.getContext('2d').drawImage(img,0,0);
+          const c=await nativeDetector.detect(cv); if(c&&c.length) barcode=c[0].rawValue;
+        } catch(e){}
+      }
     }
-
-    if(barcode){
-      onBarcodeDetected(barcode);
-    } else {
-      setStatus(
-        nativeDetector
-          ? '⚠️ Nessun barcode rilevato. Prova una foto più nitida e ravvicinata, con buona illuminazione.'
-          : '⚠️ Il tuo browser non supporta la lettura automatica del barcode da immagine.\nInserisci il codice numerico stampato sotto il barcode nel campo qui sopra.',
-        'var(--amber)'
-      );
-    }
-    input.value = '';
-  };
-  img.onerror = () => {
-    setStatus('⚠️ Impossibile leggere l\'immagine.', 'var(--red)');
-    input.value = '';
     URL.revokeObjectURL(url);
+    if(barcode){ onBarcodeDetected(barcode); }
+    else { setStatus(nativeDetector?'⚠️ Nessun barcode rilevato. Assicurati che l\'immagine sia nitida e il barcode ben visibile.':'⚠️ Browser non supportato. Inserisci il codice manualmente.','var(--amber)'); }
+    input.value='';
+  };
+  img.onerror = () => { setStatus('⚠️ Impossibile leggere l\'immagine.','var(--red)'); input.value=''; URL.revokeObjectURL(url); };
   };
   img.src = url;
 }
@@ -2751,13 +2792,13 @@ function syncBottomNav(s){
 // Patch nav() to sync bottom nav and handle mobile routing
 const _origNav = nav;
 nav = function(s){
-  // On mobile, route sleep/neat to combined view
   if(isMobile() && (s==='sleep'||s==='neat')) s='sleepneat';
   _origNav(s);
   syncBottomNav(s);
-  // If settings needed for initial setup
   if(s==='settings') renderSettings();
-  // Scroll to top
+  // FAB only visible on dashboard
+  const fab=document.getElementById('fab');
+  if(fab) fab.style.display=isMobile()&&s==='dashboard'?'flex':'none';
   document.querySelector('.main').scrollTo(0,0);
 };
 
@@ -2787,6 +2828,13 @@ function openMModal(type){
   if(type==='steps'){ const l=getLog(curDate); document.getElementById('ms-steps').value=l.steps||''; calcMStepsKcal(); }
   if(type==='sleep'){ const l=getLog(curDate); document.getElementById('msl-start').value=l.sleep.bedtime||'23:00'; document.getElementById('msl-end').value=l.sleep.wakeup||'07:00'; mSleepQ=l.sleep.quality||4; updMQ(); calcMSl(); }
   if(type==='food'){ document.getElementById('mf-name').value=''; clearMFoodForm(); }
+  if(type==='weight'){
+    document.getElementById('mw-date').value=today();
+    document.getElementById('mw-kg').value='';
+    const curW=currentWeight(S.profile);
+    const prev=S.weightLog.length?[...S.weightLog].sort((a,b)=>b.date.localeCompare(a.date))[0]:null;
+    document.getElementById('mw-prev').textContent=prev?`Ultima: ${prev.weight} kg (${fmtDateShort(prev.date)})`:`Peso partenza: ${curW} kg`;
+  }
 }
 function closeMModal(type){
   document.getElementById('m-modal-'+type).classList.remove('open');
@@ -2828,6 +2876,12 @@ function calcMFoodFromDb(){
   document.getElementById('mf-pro').value=round2(mSelectedFood.pro*f);
   document.getElementById('mf-carb').value=round2(mSelectedFood.carb*f);
   document.getElementById('mf-fat').value=round2(mSelectedFood.fat*f);
+}
+function openSlotAdd(slot){
+  openMModal('food');
+  // Pre-select the slot
+  const s1=document.getElementById('mf-slot'); if(s1) s1.value=slot;
+  const s2=document.getElementById('mf-slot2'); if(s2) s2.value=slot;
 }
 function addFoodMobile(){
   const name=document.getElementById('mf-name').value.trim();
@@ -2916,6 +2970,16 @@ function saveStepsMobile(){
   save(); closeMModal('steps'); toast('✅ Passi salvati!');
   renderMDash();
 }
+function addWeightMobile(){
+  const date=document.getElementById('mw-date').value;
+  const weight=parseFloat(document.getElementById('mw-kg').value);
+  if(!date||!weight){toast('⚠️ Inserisci data e peso',true);return;}
+  S.weightLog=S.weightLog.filter(e=>e.date!==date);
+  S.weightLog.push({date,weight});
+  S.weightLog.sort((a,b)=>a.date.localeCompare(b.date));
+  save(); closeMModal('weight'); toast('✅ Peso registrato: '+weight+' kg');
+  renderMDash(); updateBMR();
+}
 
 // ── Mobile Sleep ──────────────────────────────────
 let mSleepQ=4;
@@ -2955,9 +3019,27 @@ function calcSn(){
   if(vs){vs.textContent=(+diff>=0?'+':'')+diff+'h vs obiettivo';vs.style.color=+diff>=0?'var(--green)':'var(--red)';}
   return h;
 }
+function syncSnHours(){
+  const h=parseFloat(document.getElementById('sn-hours-direct').value)||0;
+  if(!h) return;
+  // Update the calc display directly
+  document.getElementById('sn-calc').textContent=h+'h';
+  const goal=S.profile.sleepGoal||8, diff=(h-goal).toFixed(1);
+  const vs=document.getElementById('sn-vs');
+  if(vs){vs.textContent=(+diff>=0?'+':'')+diff+'h vs obiettivo';vs.style.color=+diff>=0?'var(--green)':'var(--red)';}
+}
 function saveSnSleep(){
-  const hours=calcSn()||0;
-  getLog(curDate).sleep={hours,bedtime:document.getElementById('sn-start').value,wakeup:document.getElementById('sn-end').value,quality:snQ,notes:'',interruptions:0};
+  // Determine hours: direct input takes priority if filled
+  const direct=parseFloat(document.getElementById('sn-hours-direct').value)||0;
+  const hours=direct||calcSn()||0;
+  getLog(curDate).sleep={
+    hours,
+    bedtime:document.getElementById('sn-start').value,
+    wakeup:document.getElementById('sn-end').value,
+    quality:snQ,
+    notes:'',
+    interruptions:parseInt(document.getElementById('sn-inter').value)||0
+  };
   save(); toast('✅ Sonno salvato!'); renderMDash();
 }
 function calcSnSteps(){
@@ -3007,6 +3089,12 @@ function renderSleepNeat(){
   const l=getLog(curDate),sl=l.sleep;
   document.getElementById('sn-start').value=sl.bedtime||'23:00';
   document.getElementById('sn-end').value=sl.wakeup||'07:00';
+  // Direct hours field: populate if hours exist but no bedtime/wakeup
+  const directEl=document.getElementById('sn-hours-direct');
+  if(directEl) directEl.value=sl.hours&&(!sl.bedtime)?sl.hours:'';
+  // Interruptions
+  const interEl=document.getElementById('sn-inter');
+  if(interEl) interEl.value=sl.interruptions||0;
   snQ=sl.quality||4;
   document.querySelectorAll('#sn-quality .qs-item').forEach((el,i)=>el.classList.toggle('sel',i+1===snQ));
   calcSn();
@@ -3016,6 +3104,8 @@ function renderSleepNeat(){
 }
 
 // ── Mobile Dashboard ──────────────────────────────
+let mDashWeightFilter = '1m'; // '1m' | '3m' | '6m'
+
 function renderMDash(){
   if(!isMobile()) return;
   const l=getLog(curDate),p=S.profile;
@@ -3028,17 +3118,28 @@ function renderMDash(){
   const totP=round2(l.nutrition.meals.reduce((s,m)=>s+(m.pro||0),0));
   const totC=round2(l.nutrition.meals.reduce((s,m)=>s+(m.carb||0),0));
   const totF=round2(l.nutrition.meals.reduce((s,m)=>s+(m.fat||0),0));
-  const wg=p.waterGoal||2500;
   const rem=tk-cons+exK;
 
-  // Build mobile dashboard HTML
-  const dash=document.getElementById('s-dashboard');
-  // Check if mobile dash div exists
+  // Weight trend data
+  const now=new Date();
+  const filterDays={'1m':30,'3m':90,'6m':180};
+  const days=filterDays[mDashWeightFilter]||30;
+  const cutoff=new Date(now); cutoff.setDate(cutoff.getDate()-days);
+  const cutoffStr=cutoff.toISOString().split('T')[0];
+  // Include profile start weight as origin
+  let wEntries=[];
+  if(p.weight) wEntries.push({date:'Partenza',weight:p.weight,isStart:true});
+  S.weightLog.filter(e=>e.date>=cutoffStr).sort((a,b)=>a.date.localeCompare(b.date)).forEach(e=>wEntries.push(e));
+  const hasWeight=wEntries.length>1;
+  const curW=currentWeight(p);
+  const startW=p.weight||curW;
+  const wDiff=round2(curW-startW);
+
   let mDiv=document.getElementById('m-dash-content');
   if(!mDiv){
     mDiv=document.createElement('div');
     mDiv.id='m-dash-content';
-    dash.appendChild(mDiv);
+    document.getElementById('s-dashboard').appendChild(mDiv);
   }
 
   mDiv.innerHTML=`
@@ -3069,14 +3170,29 @@ function renderMDash(){
       <div class="m-prog-row" style="margin:0"><div class="m-prog-lbl">Grassi</div><div class="m-prog-bar"><div class="m-prog-fill" style="width:${Math.min(100,totF/(mg.f||1)*100).toFixed(1)}%;background:var(--green)"></div></div><div class="m-prog-val">${totF}/${mg.f}g</div></div>
     </div>
 
-    <!-- Quick actions -->
-    <div style="font-size:11px;color:var(--text3);margin-bottom:6px;letter-spacing:.5px">ACCESSO RAPIDO</div>
-    <div class="m-quick-row">
-      <div class="m-qa" onclick="fabAction('food')">🍽 Aggiungi pasto</div>
-      <div class="m-qa" onclick="fabAction('water')">💧 Acqua</div>
-      <div class="m-qa" onclick="fabAction('exercise')">💪 Allenamento</div>
-      <div class="m-qa" onclick="fabAction('steps')">👟 Passi</div>
-      <div class="m-qa" onclick="fabAction('sleep')">😴 Sonno</div>
+    <!-- Weight trend -->
+    <div class="card" style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div class="card-title" style="margin:0">⚖️ Andamento Peso</div>
+        <div style="display:flex;gap:4px">
+          ${['1m','3m','6m'].map(f=>`<button onclick="mDashWeightFilter='${f}';renderMDash()" style="padding:3px 9px;border-radius:5px;font-size:11px;font-family:'DM Sans',sans-serif;font-weight:600;border:1px solid ${mDashWeightFilter===f?'var(--amber)':'var(--border2)'};background:${mDashWeightFilter===f?'var(--amber-dim)':'transparent'};color:${mDashWeightFilter===f?'var(--amber)':'var(--text3)'};cursor:pointer">${f==='1m'?'1 mese':f==='3m'?'3 mesi':'6 mesi'}</button>`).join('')}
+        </div>
+      </div>
+      ${hasWeight
+        ? `<div style="position:relative;height:120px"><canvas id="m-weight-c"></canvas></div>
+           <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:11.5px">
+             <span style="color:var(--text3)">Partenza: <b style="color:var(--text2)">${startW} kg</b></span>
+             <span style="color:var(--text3)">Attuale: <b style="color:var(--amber)">${curW} kg</b> <span style="color:${wDiff<=0?'var(--green)':'var(--red)'}">${wDiff>0?'+':''}${wDiff}</span></span>
+           </div>`
+        : `<div style="text-align:center;padding:16px;font-size:12px;color:var(--text3)">Aggiungi misurazioni in Cibo → Peso</div>`}
+    </div>
+
+    <!-- Quick actions — only 3 -->
+    <div style="font-size:11px;color:var(--text3);margin-bottom:6px;letter-spacing:.5px;font-family:'DM Sans',sans-serif">ACCESSO RAPIDO</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
+      <button onclick="fabAction('food')" style="background:var(--amber-dim);border:1px solid var(--amber-border);border-radius:10px;padding:14px 8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;color:var(--amber);display:flex;flex-direction:column;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent"><span style="font-size:22px">🍽</span>Aggiungi Pasto</button>
+      <button onclick="fabAction('water')" style="background:var(--blue-dim);border:1px solid rgba(74,158,255,.25);border-radius:10px;padding:14px 8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;color:var(--blue);display:flex;flex-direction:column;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent"><span style="font-size:22px">💧</span>Acqua</button>
+      <button onclick="openMModal('weight')" style="background:var(--green-dim);border:1px solid rgba(34,199,144,.25);border-radius:10px;padding:14px 8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;color:var(--green);display:flex;flex-direction:column;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent"><span style="font-size:22px">⚖️</span>Peso</button>
     </div>
 
     <!-- Today's meals compact -->
@@ -3085,15 +3201,15 @@ function renderMDash(){
       <div class="card-title">Pasti di oggi</div>
       ${l.nutrition.meals.slice(-5).map(m=>`
         <div class="li" style="padding:8px 0">
-          <div class="li-info"><h4 style="font-size:13px">${m.name}</h4></div>
+          <div class="li-info"><h4 style="font-size:13px">${m.name}</h4><p style="font-size:11px">${SLOTS.find(s=>s.k===m.slot)?.label||''}</p></div>
           <div class="li-meta"><span class="kcal" style="font-size:12px">${m.kcal} kcal</span></div>
         </div>`).join('')}
     </div>`:''}
 
-    <!-- Steps bar -->
+    <!-- Steps bar if present -->
     ${l.steps?`<div class="card" style="margin-bottom:12px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div style="font-size:13px;font-weight:600">👟 ${(l.steps||0).toLocaleString('it-IT')} passi</div>
+        <div style="font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif">👟 ${(l.steps||0).toLocaleString('it-IT')} passi</div>
         <div style="font-size:12px;color:var(--text3)">${Math.round((l.steps||0)/10000*100)}%</div>
       </div>
       <div style="height:5px;background:var(--bg4);border-radius:3px;overflow:hidden"><div style="height:100%;background:var(--blue);width:${Math.min(100,(l.steps||0)/10000*100).toFixed(1)}%"></div></div>
@@ -3103,14 +3219,12 @@ function renderMDash(){
   // Draw mini ring
   requestAnimationFrame(()=>{
     const c=document.getElementById('m-ring-c');
-    if(!c) return;
-    destroyChart('mring');
-    charts['mring']=new Chart(c.getContext('2d'),{
-      type:'doughnut',
-      data:{datasets:[{data:cons>0?[cons,Math.max(0,tk-cons)]:[1,tk-1],
-        backgroundColor:cons>tk?['var(--red)','var(--bg4)']:['var(--amber)','var(--bg4)'],borderWidth:0}]},
-      options:{cutout:'72%',responsive:false,animation:{duration:400},plugins:{legend:{display:false},tooltip:{enabled:false}}}
-    });
+    if(c){ destroyChart('mring'); charts['mring']=new Chart(c.getContext('2d'),{type:'doughnut',data:{datasets:[{data:cons>0?[cons,Math.max(0,tk-cons)]:[1,tk-1],backgroundColor:cons>tk?['var(--red)','var(--bg4)']:['var(--amber)','var(--bg4)'],borderWidth:0}]},options:{cutout:'72%',responsive:false,animation:{duration:400},plugins:{legend:{display:false},tooltip:{enabled:false}}}}); }
+    // Weight chart
+    if(hasWeight){
+      const wc=document.getElementById('m-weight-c');
+      if(wc){ destroyChart('mwc'); charts['mwc']=new Chart(wc.getContext('2d'),{type:'line',data:{labels:wEntries.map(e=>e.isStart?'Start':fmtDateShort(e.date)),datasets:[{data:wEntries.map(e=>e.weight),borderColor:'var(--amber)',borderWidth:2,pointBackgroundColor:'var(--amber)',pointRadius:3,fill:false,tension:.3},{data:Array(wEntries.length).fill(p.targetWeight||wEntries[wEntries.length-1].weight),borderColor:'rgba(34,199,144,.5)',borderDash:[4,3],borderWidth:1.5,pointRadius:0,fill:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#506070',font:{size:9},maxTicksLimit:6}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#506070',font:{size:9}},beginAtZero:false}}}}); }
+    }
   });
 }
 
