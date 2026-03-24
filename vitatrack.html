@@ -234,13 +234,11 @@ textarea{resize:vertical;min-height:60px}
     <div class="logo-tag">FITNESS &amp; LIFESTYLE</div>
   </div>
   <div class="nav-item active" onclick="nav('dashboard')"><span class="nav-icon">📊</span><span class="nav-text">Cruscotto</span></div>
-  <div class="nav-item" onclick="nav('profile')"><span class="nav-icon">👤</span><span class="nav-text">Profilo</span></div>
   <div class="nav-item" onclick="nav('nutrition')"><span class="nav-icon">🍽</span><span class="nav-text">Alimentazione</span></div>
   <div class="nav-item" onclick="nav('exercise')"><span class="nav-icon">💪</span><span class="nav-text">Esercizio</span></div>
   <div class="nav-item" onclick="nav('sleep')"><span class="nav-icon">😴</span><span class="nav-text">Sonno</span></div>
   <div class="nav-item" onclick="nav('neat')"><span class="nav-icon">🚶</span><span class="nav-text">NEAT</span></div>
-  <div class="nav-item" onclick="nav('import')"><span class="nav-icon">📥</span><span class="nav-text">Import Rapido</span></div>
-  <div class="nav-item" onclick="nav('dataio')"><span class="nav-icon">💾</span><span class="nav-text">Backup Dati</span></div>
+  <div class="nav-item" onclick="nav('settings')"><span class="nav-icon">⚙️</span><span class="nav-text">Impostazioni</span></div>
   <div class="sidebar-bottom"><div class="sidebar-date" id="sb-date"></div><div style="font-size:10px;color:var(--text3);margin-top:2px;opacity:.6">v2.0</div></div>
 </nav>
 
@@ -287,108 +285,174 @@ textarea{resize:vertical;min-height:60px}
 </section>
 
 <!-- ──────────────────── PROFILE ──────────────────── -->
-<section id="s-profile" class="section">
-  <div class="ph"><h1>Il Mio Profilo</h1><p>Dati personali, obiettivi, macro personalizzati e storico peso</p></div>
-  <div class="notice" id="p-notice" style="display:none">⚠️ Completa il profilo per attivare tutti i calcoli automatici.</div>
-  <div class="g2" style="margin-bottom:14px">
-    <div class="card">
-      <div class="card-title">Dati Personali</div>
-      <div class="fr"><div class="fg"><label>Nome</label><input id="p-name" type="text" placeholder="Il tuo nome"></div><div class="fg"><label>Età</label><input id="p-age" type="number" placeholder="30" min="10" max="100"></div></div>
-      <div class="fr"><div class="fg"><label>Sesso</label><select id="p-gender"><option value="male">Maschio</option><option value="female">Femmina</option></select></div><div class="fg"><label>Altezza (cm)</label><input id="p-height" type="number" placeholder="175" min="100" max="250"></div></div>
-      <div class="fr"><div class="fg"><label>Peso Iniziale / Partenza (kg)</label><input id="p-weight" type="number" placeholder="70" step="0.1" min="30" max="300"></div><div class="fg"><label>Peso Obiettivo (kg)</label><input id="p-twt" type="number" placeholder="65" step="0.1" min="30" max="300"></div></div>
-    </div>
-    <div class="card">
-      <div class="card-title">Stile di Vita &amp; Obiettivi</div>
-      <div class="fg"><label>Livello di Attività Fisica</label>
-        <select id="p-act">
-          <option value="1.2">Sedentario (poco o nessun esercizio)</option>
-          <option value="1.375" selected>Leggermente attivo (1–3 gg/sett.)</option>
-          <option value="1.55">Moderatamente attivo (3–5 gg/sett.)</option>
-          <option value="1.725">Molto attivo (6–7 gg/sett.)</option>
-          <option value="1.9">Estremamente attivo (atleta/lavoro fisico)</option>
-        </select>
-      </div>
-      <div class="fg"><label>Obiettivo Principale</label>
-        <select id="p-goal">
-          <option value="lose">Perdere Peso (−500 kcal/giorno)</option>
-          <option value="maintain" selected>Mantenere il Peso</option>
-          <option value="gain">Aumentare Massa (+300 kcal/giorno)</option>
-        </select>
-      </div>
-      <div class="fr">
-        <div class="fg"><label>Obiettivo Acqua (ml)</label><input id="p-water" type="number" placeholder="2500" min="500" max="6000" step="100"></div>
-        <div class="fg"><label>Ore Sonno Obiettivo</label><input id="p-sleep" type="number" placeholder="8" min="4" max="12" step="0.5"></div>
-      </div>
-    </div>
+<!-- ──────────────────── IMPOSTAZIONI ──────────────────── -->
+<section id="s-settings" class="section">
+  <div class="ph"><h1>Impostazioni</h1><p>Profilo, import rapido e backup dati</p></div>
+  <div class="stab-bar">
+    <div class="stab active" onclick="setSettingsTab('profile')">👤 Profilo</div>
+    <div class="stab" onclick="setSettingsTab('import')">📥 Import Rapido</div>
+    <div class="stab" onclick="setSettingsTab('backup')">💾 Backup</div>
   </div>
 
-  <!-- Macro Section -->
-  <div class="card" style="margin-bottom:14px">
-    <div class="card-title">Macro &amp; Calorie Obiettivo</div>
-    <div class="fg">
-      <label>Modalità Calcolo Macro</label>
-      <div class="pills" id="macro-mode-pills">
-        <div class="pill sel" data-v="auto" onclick="setMacroMode(this)">⚡ Automatico</div>
-        <div class="pill" data-v="custom" onclick="setMacroMode(this)">✏️ Personalizzato</div>
+  <!-- ── PROFILO ── -->
+  <div id="st-profile">
+    <div class="notice" id="p-notice" style="display:none">⚠️ Completa il profilo per attivare tutti i calcoli automatici.</div>
+    <div class="g2" style="margin-bottom:14px">
+      <div class="card">
+        <div class="card-title">Dati Personali</div>
+        <div class="fr"><div class="fg"><label>Nome</label><input id="p-name" type="text" placeholder="Il tuo nome"></div><div class="fg"><label>Età</label><input id="p-age" type="number" placeholder="30" min="10" max="100"></div></div>
+        <div class="fr"><div class="fg"><label>Sesso</label><select id="p-gender"><option value="male">Maschio</option><option value="female">Femmina</option></select></div><div class="fg"><label>Altezza (cm)</label><input id="p-height" type="number" placeholder="175" min="100" max="250"></div></div>
+        <div class="fr">
+          <div class="fg"><label>Peso di Partenza (kg) <span style="color:var(--text3);font-weight:400">— punto di inizio percorso</span></label><input id="p-weight" type="number" placeholder="70" step="0.1" min="30" max="300"></div>
+          <div class="fg"><label>Peso Obiettivo (kg)</label><input id="p-twt" type="number" placeholder="65" step="0.1" min="30" max="300"></div>
+        </div>
+        <div style="font-size:12px;color:var(--text3);margin-top:-8px;margin-bottom:10px">Il peso corrente viene aggiornato dal log in Alimentazione → Peso.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Stile di Vita &amp; Obiettivi</div>
+        <div class="fg"><label>Livello di Attività Fisica</label>
+          <select id="p-act">
+            <option value="1.2">Sedentario (poco o nessun esercizio)</option>
+            <option value="1.375" selected>Leggermente attivo (1–3 gg/sett.)</option>
+            <option value="1.55">Moderatamente attivo (3–5 gg/sett.)</option>
+            <option value="1.725">Molto attivo (6–7 gg/sett.)</option>
+            <option value="1.9">Estremamente attivo (atleta/lavoro fisico)</option>
+          </select>
+        </div>
+        <div class="fg"><label>Obiettivo Principale</label>
+          <select id="p-goal">
+            <option value="lose">Perdere Peso (−500 kcal/giorno)</option>
+            <option value="maintain" selected>Mantenere il Peso</option>
+            <option value="gain">Aumentare Massa (+300 kcal/giorno)</option>
+          </select>
+        </div>
+        <div class="fr">
+          <div class="fg"><label>Obiettivo Acqua (ml)</label><input id="p-water" type="number" placeholder="2500" min="500" max="6000" step="100"></div>
+          <div class="fg"><label>Ore Sonno Obiettivo</label><input id="p-sleep" type="number" placeholder="8" min="4" max="12" step="0.5"></div>
+        </div>
       </div>
     </div>
-    <div id="macro-auto-info" style="font-size:12.5px;color:var(--text2);margin-bottom:10px;line-height:1.6">
-      In modalità automatica: Proteine 25–35% kcal · Carboidrati 50% · Grassi 25%
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-title">Macro &amp; Calorie Obiettivo</div>
+      <div class="fg">
+        <label>Modalità Calcolo Macro</label>
+        <div class="pills" id="macro-mode-pills">
+          <div class="pill sel" data-v="auto" onclick="setMacroMode(this)">⚡ Automatico</div>
+          <div class="pill" data-v="custom" onclick="setMacroMode(this)">✏️ Personalizzato</div>
+        </div>
+      </div>
+      <div id="macro-auto-info" style="font-size:12.5px;color:var(--text2);margin-bottom:10px;line-height:1.6">In modalità automatica: Proteine 25–35% kcal · Carboidrati 50% · Grassi 25%</div>
+      <div id="macro-custom-inputs" style="display:none">
+        <div class="fr3">
+          <div class="fg">
+            <label>Proteine <span style="color:var(--text3);font-weight:400">(g/kg peso)</span></label>
+            <input id="p-proto-kg" type="number" placeholder="1.6" step="0.1" min="0.5" max="4" oninput="updMacroPreview()">
+            <div style="font-size:11px;color:var(--text3);margin-top:4px">= <span id="prev-p-g" style="color:var(--purple);font-weight:600">–</span>g · <span id="prev-p-pct" style="color:var(--text3)">–</span>% kcal</div>
+          </div>
+          <div class="fg">
+            <label>Carboidrati <span style="color:var(--text3);font-weight:400">(% kcal)</span></label>
+            <input id="p-carb-pct" type="number" placeholder="50" step="1" min="5" max="80" oninput="updMacroPreview()">
+            <div style="font-size:11px;color:var(--text3);margin-top:4px">= <span id="prev-c-g" style="color:var(--amber);font-weight:600">–</span>g · <span id="prev-c-kg" style="color:var(--text3)">–</span></div>
+          </div>
+          <div class="fg">
+            <label>Grassi <span style="color:var(--text3);font-weight:400">(% kcal)</span></label>
+            <input id="p-fat-pct" type="number" placeholder="25" step="1" min="5" max="60" oninput="updMacroPreview()">
+            <div style="font-size:11px;color:var(--text3);margin-top:4px">= <span id="prev-f-g" style="color:var(--green);font-weight:600">–</span>g · <span id="prev-f-kg" style="color:var(--text3)">–</span></div>
+          </div>
+        </div>
+        <div id="macro-total-warn" style="font-size:12px;margin-top:2px"></div>
+      </div>
+      <div class="fr" style="margin-top:10px">
+        <div class="fg"><label>Calorie Personalizzate <span style="color:var(--text3);font-weight:400">— 0 = automatico</span></label><input id="p-ckcal" type="number" placeholder="0" min="0" max="10000"></div>
+        <div></div>
+      </div>
     </div>
-    <div id="macro-custom-inputs" style="display:none">
+    <div style="text-align:center;margin:18px 0"><button class="btn btn-primary" onclick="saveProfile()">💾 Salva Profilo</button></div>
+    <div class="bmr-box" id="bmr-box" style="display:none">
+      <div class="bmr-title">📊 Valori Calcolati — Formula Mifflin-St Jeor</div>
+      <div class="bmr-grid">
+        <div class="bmr-item"><div class="bmr-val" id="bv-bmr">–</div><div class="bmr-lbl">BMR (kcal)</div></div>
+        <div class="bmr-item"><div class="bmr-val" id="bv-tdee">–</div><div class="bmr-lbl">TDEE (kcal)</div></div>
+        <div class="bmr-item"><div class="bmr-val" id="bv-target">–</div><div class="bmr-lbl">Obiettivo (kcal)</div></div>
+        <div class="bmr-item"><div class="bmr-val" id="bv-bmi">–</div><div class="bmr-lbl">BMI</div></div>
+      </div>
+      <div class="card-title" style="margin-bottom:10px">Macro Obiettivo Giornalieri</div>
       <div class="fr3">
-        <div class="fg">
-          <label>Proteine <span style="color:var(--text3);font-weight:400">(g/kg peso)</span></label>
-          <input id="p-proto-kg" type="number" placeholder="1.6" step="0.1" min="0.5" max="4" oninput="updMacroPreview()">
-          <div style="font-size:11px;color:var(--text3);margin-top:4px">= <span id="prev-p-g" style="color:var(--purple);font-weight:600">–</span>g · <span id="prev-p-pct" style="color:var(--text3)">–</span>% kcal</div>
-        </div>
-        <div class="fg">
-          <label>Carboidrati <span style="color:var(--text3);font-weight:400">(% kcal)</span></label>
-          <input id="p-carb-pct" type="number" placeholder="50" step="1" min="5" max="80" oninput="updMacroPreview()">
-          <div style="font-size:11px;color:var(--text3);margin-top:4px">= <span id="prev-c-g" style="color:var(--amber);font-weight:600">–</span>g · <span id="prev-c-kg" style="color:var(--text3)">–</span></div>
-        </div>
-        <div class="fg">
-          <label>Grassi <span style="color:var(--text3);font-weight:400">(% kcal)</span></label>
-          <input id="p-fat-pct" type="number" placeholder="25" step="1" min="5" max="60" oninput="updMacroPreview()">
-          <div style="font-size:11px;color:var(--text3);margin-top:4px">= <span id="prev-f-g" style="color:var(--green);font-weight:600">–</span>g · <span id="prev-f-kg" style="color:var(--text3)">–</span></div>
-        </div>
+        <div style="text-align:center"><div style="font-size:17px;font-weight:700;color:var(--purple)" id="bv-p">–</div><div style="font-size:11px;color:var(--text3);margin-top:3px" id="bv-p-ref">Proteine (g)</div></div>
+        <div style="text-align:center"><div style="font-size:17px;font-weight:700;color:var(--amber)" id="bv-c">–</div><div style="font-size:11px;color:var(--text3);margin-top:3px" id="bv-c-ref">Carboidrati (g)</div></div>
+        <div style="text-align:center"><div style="font-size:17px;font-weight:700;color:var(--green)" id="bv-f">–</div><div style="font-size:11px;color:var(--text3);margin-top:3px" id="bv-f-ref">Grassi (g)</div></div>
       </div>
-      <div id="macro-total-warn" style="font-size:12px;margin-top:2px"></div>
-    </div>
-    <div class="fr" style="margin-top:10px">
-      <div class="fg"><label>Calorie Personalizzate (kcal/g) <span style="color:var(--text3);font-weight:400">— 0 = calcolo automatico</span></label><input id="p-ckcal" type="number" placeholder="0" min="0" max="10000"></div>
-      <div></div>
     </div>
   </div>
 
-  <div style="text-align:center;margin:18px 0"><button class="btn btn-primary" onclick="saveProfile()">💾 Salva Profilo</button></div>
-
-  <div class="bmr-box" id="bmr-box" style="display:none">
-    <div class="bmr-title">📊 Valori Calcolati — Formula Mifflin-St Jeor</div>
-    <div class="bmr-grid">
-      <div class="bmr-item"><div class="bmr-val" id="bv-bmr">–</div><div class="bmr-lbl">BMR (kcal)</div></div>
-      <div class="bmr-item"><div class="bmr-val" id="bv-tdee">–</div><div class="bmr-lbl">TDEE (kcal)</div></div>
-      <div class="bmr-item"><div class="bmr-val" id="bv-target">–</div><div class="bmr-lbl">Obiettivo (kcal)</div></div>
-      <div class="bmr-item"><div class="bmr-val" id="bv-bmi">–</div><div class="bmr-lbl">BMI</div></div>
-    </div>
-    <div class="card-title" style="margin-bottom:10px">Macro Obiettivo Giornalieri</div>
-    <div class="fr3">
-      <div style="text-align:center"><div style="font-size:17px;font-weight:700;color:var(--purple)" id="bv-p">–</div><div style="font-size:11px;color:var(--text3);margin-top:3px" id="bv-p-ref">Proteine (g)</div></div>
-      <div style="text-align:center"><div style="font-size:17px;font-weight:700;color:var(--amber)" id="bv-c">–</div><div style="font-size:11px;color:var(--text3);margin-top:3px" id="bv-c-ref">Carboidrati (g)</div></div>
-      <div style="text-align:center"><div style="font-size:17px;font-weight:700;color:var(--green)" id="bv-f">–</div><div style="font-size:11px;color:var(--text3);margin-top:3px" id="bv-f-ref">Grassi (g)</div></div>
+  <!-- ── IMPORT RAPIDO ── -->
+  <div id="st-import" style="display:none">
+    <div class="notice">💡 Inserisci i totali di una giornata passata in pochi secondi — senza dettaglio pasto per pasto.</div>
+    <div class="g2">
+      <div class="card">
+        <div class="card-title">Dati Giornata</div>
+        <div class="fg"><label>Data</label><input id="imp-date" type="date"></div>
+        <div class="div"></div>
+        <div class="card-title">Alimentazione</div>
+        <div class="fr3">
+          <div class="fg"><label>Calorie (kcal)</label><input id="imp-kcal" type="number" placeholder="2100" min="0"></div>
+          <div class="fg"><label>Proteine (g)</label><input id="imp-pro" type="number" placeholder="120" min="0" step="0.1"></div>
+          <div class="fg"><label>Carboidrati (g)</label><input id="imp-carb" type="number" placeholder="220" min="0" step="0.1"></div>
+        </div>
+        <div class="fr">
+          <div class="fg"><label>Grassi (g)</label><input id="imp-fat" type="number" placeholder="70" min="0" step="0.1"></div>
+          <div class="fg"><label>Acqua (ml)</label><input id="imp-water" type="number" placeholder="2000" min="0"></div>
+        </div>
+        <div class="div"></div>
+        <div class="card-title">Attività &amp; Sonno</div>
+        <div class="fr3">
+          <div class="fg"><label>Passi</label><input id="imp-steps" type="number" placeholder="8000" min="0" step="100"></div>
+          <div class="fg"><label>Calorie Esercizio (kcal)</label><input id="imp-exkcal" type="number" placeholder="300" min="0"></div>
+          <div class="fg"><label>Ore Sonno</label><input id="imp-sleep" type="number" placeholder="7.5" min="0" max="24" step="0.5"></div>
+        </div>
+        <div class="fg"><label>Note</label><textarea id="imp-notes" placeholder="Es. giornata di lavoro, pasto fuori..."></textarea></div>
+        <button class="btn btn-primary" onclick="doImport()">📥 Importa Giornata</button>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-title">Come funziona</div>
+          <div style="font-size:13px;color:var(--text2);line-height:1.8">
+            Crea una <span style="color:var(--amber);font-weight:600">voce aggregata</span> nel diario. Se il giorno ha già dati, la voce import viene aggiornata mantenendo i dettagli esistenti.
+          </div>
+        </div>
+        <div class="card"><div class="card-title">Giorni Importati</div><div id="imp-history"></div></div>
+      </div>
     </div>
   </div>
 
-  <!-- Weight Log -->
-  <div class="card" style="margin-top:18px">
-    <div class="card-title">📏 Storico Peso</div>
-    <div class="fr" style="margin-bottom:12px;align-items:flex-end">
-      <div class="fg" style="margin:0"><label>Data</label><input id="wl-date" type="date"></div>
-      <div class="fg" style="margin:0"><label>Peso (kg)</label><input id="wl-weight" type="number" placeholder="70.5" step="0.1" min="30" max="300"></div>
+  <!-- ── BACKUP ── -->
+  <div id="st-backup" style="display:none">
+    <div class="g2">
+      <div class="card">
+        <div class="card-title">📤 Esporta Dati</div>
+        <div style="font-size:13px;color:var(--text2);line-height:1.8;margin-bottom:16px">Scarica un file <code style="background:var(--bg4);padding:2px 6px;border-radius:4px;font-size:12px">.vitatrack.json</code> con tutti i tuoi dati.</div>
+        <div id="export-summary" style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rsm);padding:12px;margin-bottom:16px;font-size:12.5px;color:var(--text2);line-height:1.8"></div>
+        <button class="btn btn-primary" onclick="exportData()">📤 Scarica Backup</button>
+      </div>
+      <div class="card">
+        <div class="card-title">📂 Importa da File</div>
+        <div style="font-size:13px;color:var(--text2);line-height:1.8;margin-bottom:16px">Carica un file <code style="background:var(--bg4);padding:2px 6px;border-radius:4px;font-size:12px">.vitatrack.json</code> esportato in precedenza.</div>
+        <div class="fg">
+          <label>Modalità</label>
+          <div class="pills" style="margin-bottom:0" id="import-mode-pills">
+            <div class="pill sel" data-v="merge" onclick="selImportMode(this)">🔀 Unisci</div>
+            <div class="pill" data-v="replace" onclick="selImportMode(this)">🔄 Sostituisci tutto</div>
+          </div>
+          <input type="hidden" id="import-mode" value="merge">
+        </div>
+        <div id="import-mode-desc" style="font-size:12px;color:var(--text3);margin-bottom:14px;line-height:1.6"><b>Unisci:</b> aggiunge log del file ai tuoi — giorni già presenti ignorati. Cibi e ricette sommati (no duplicati).</div>
+        <label style="cursor:pointer;display:block">
+          <input type="file" id="import-file" accept=".json,.vitatrack.json" style="display:none" onchange="importData(this)">
+          <span class="btn btn-ghost" style="font-family:'DM Sans',sans-serif;font-size:13px;display:inline-flex;align-items:center;gap:6px">📂 Seleziona File</span>
+        </label>
+        <div id="import-status" style="margin-top:14px;font-size:13px;display:none"></div>
+      </div>
     </div>
-    <button class="btn btn-ghost btn-sm" onclick="addWeight()" style="margin-bottom:16px">+ Aggiungi Misurazione</button>
-    <div class="cw" style="margin-bottom:14px"><canvas id="wl-chart"></canvas></div>
-    <div id="wl-list"></div>
   </div>
 </section>
 
@@ -400,6 +464,7 @@ textarea{resize:vertical;min-height:60px}
   </div>
   <div class="stab-bar">
     <div class="stab active" onclick="setNutrTab('diary')">📓 Diario</div>
+    <div class="stab" onclick="setNutrTab('weight')">⚖️ Peso</div>
     <div class="stab" onclick="setNutrTab('db')">🗃 Database Cibi</div>
     <div class="stab" onclick="setNutrTab('recipes')">📖 Ricette</div>
   </div>
@@ -468,6 +533,30 @@ textarea{resize:vertical;min-height:60px}
       <div style="display:flex;gap:8px">
         <button class="btn btn-primary btn-sm" onclick="addRecipeToMeal()">+ Aggiungi</button>
         <button class="btn btn-ghost btn-sm" onclick="document.getElementById('rec-to-meal').style.display='none'">Annulla</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PESO -->
+  <div id="n-tab-weight" style="display:none">
+    <div class="g2">
+      <div class="card">
+        <div class="card-title">⚖️ Registra Peso</div>
+        <div style="font-size:12.5px;color:var(--text2);margin-bottom:14px;line-height:1.6">
+          Il <b>peso di partenza</b> è impostato in Impostazioni → Profilo e costituisce il primo punto del grafico.<br>
+          Aggiungi qui le misurazioni successive ogni volta che ti pesi.
+        </div>
+        <div class="fr" style="align-items:flex-end;margin-bottom:12px">
+          <div class="fg" style="margin:0"><label>Data</label><input id="wl-date" type="date"></div>
+          <div class="fg" style="margin:0"><label>Peso (kg)</label><input id="wl-weight" type="number" placeholder="70.5" step="0.1" min="30" max="300"></div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="addWeight()" style="margin-bottom:6px">+ Aggiungi Misurazione</button>
+        <div id="wl-current" style="margin-top:14px;padding:12px;background:var(--bg3);border-radius:var(--rsm);border:1px solid var(--border);font-size:13px;color:var(--text2)"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Andamento Peso</div>
+        <div class="cw" style="margin-bottom:14px"><canvas id="wl-chart"></canvas></div>
+        <div id="wl-list"></div>
       </div>
     </div>
   </div>
@@ -666,107 +755,6 @@ textarea{resize:vertical;min-height:60px}
   </div>
 </section>
 
-<!-- ──────────────────── IMPORT RAPIDO ──────────────────── -->
-<section id="s-import" class="section">
-  <div class="ph"><h1>Import Rapido</h1><p>Inserisci i totali di una giornata passata in pochi secondi — senza dettaglio pasto per pasto</p></div>
-  <div class="notice">💡 Utile per recuperare giorni precedenti senza dover inserire ogni alimento singolarmente. Salva kcal, macro, sonno e passi come unica voce giornaliera.</div>
-  <div class="g2">
-    <div class="card">
-      <div class="card-title">Dati Giornata</div>
-      <div class="fg"><label>Data</label><input id="imp-date" type="date"></div>
-      <div class="div"></div>
-      <div class="card-title">Alimentazione</div>
-      <div class="fr3">
-        <div class="fg"><label>Calorie Totali (kcal)</label><input id="imp-kcal" type="number" placeholder="2100" min="0"></div>
-        <div class="fg"><label>Proteine (g)</label><input id="imp-pro" type="number" placeholder="120" min="0" step="0.1"></div>
-        <div class="fg"><label>Carboidrati (g)</label><input id="imp-carb" type="number" placeholder="220" min="0" step="0.1"></div>
-      </div>
-      <div class="fr">
-        <div class="fg"><label>Grassi (g)</label><input id="imp-fat" type="number" placeholder="70" min="0" step="0.1"></div>
-        <div class="fg"><label>Acqua (ml, facolt.)</label><input id="imp-water" type="number" placeholder="2000" min="0"></div>
-      </div>
-      <div class="div"></div>
-      <div class="card-title">Attività &amp; Sonno</div>
-      <div class="fr3">
-        <div class="fg"><label>Passi</label><input id="imp-steps" type="number" placeholder="8000" min="0" step="100"></div>
-        <div class="fg"><label>Calorie Esercizio (kcal)</label><input id="imp-exkcal" type="number" placeholder="300" min="0"></div>
-        <div class="fg"><label>Ore Sonno</label><input id="imp-sleep" type="number" placeholder="7.5" min="0" max="24" step="0.5"></div>
-      </div>
-      <div class="fg"><label>Note (facoltativo)</label><textarea id="imp-notes" placeholder="Es. giornata di lavoro stressante, pasto fuori..."></textarea></div>
-      <button class="btn btn-primary" onclick="doImport()">📥 Importa Giornata</button>
-    </div>
-    <div>
-      <div class="card" style="margin-bottom:14px">
-        <div class="card-title">Come funziona</div>
-        <div style="font-size:13px;color:var(--text2);line-height:1.8">
-          <div style="margin-bottom:8px">L'import crea una <span style="color:var(--amber);font-weight:600">voce aggregata</span> nel diario di quel giorno, contrassegnata come "Import rapido".</div>
-          <div style="margin-bottom:8px">Puoi comunque aprire quel giorno dall'<b>Alimentazione</b> e aggiungere dettagli in seguito.</div>
-          <div style="margin-bottom:8px">Se la data ha già dati, i valori vengono <span style="color:var(--red)">aggiornati</span> (i pasti esistenti rimangono, la voce import viene aggiornata).</div>
-          <div style="color:var(--text3);font-size:12px">Campi facoltativi: acqua, calorie esercizio, note.</div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-title">Giorni Importati</div>
-        <div id="imp-history"></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ──────────────────── BACKUP DATI ──────────────────── -->
-<section id="s-dataio" class="section">
-  <div class="ph"><h1>Backup Dati</h1><p>Esporta e importa tutti i tuoi dati in formato JSON</p></div>
-  <div class="g2">
-    <!-- EXPORT -->
-    <div class="card">
-      <div class="card-title">📤 Esporta Dati</div>
-      <div style="font-size:13px;color:var(--text2);line-height:1.8;margin-bottom:16px">
-        Scarica un file <code style="background:var(--bg4);padding:2px 6px;border-radius:4px;font-size:12px">.vitatrack.json</code> con tutti i tuoi dati:
-        profilo, log giornalieri, database cibi, ricette e storico peso.
-      </div>
-      <div id="export-summary" style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rsm);padding:12px;margin-bottom:16px;font-size:12.5px;color:var(--text2);line-height:1.8"></div>
-      <button class="btn btn-primary" onclick="exportData()">📤 Scarica Backup</button>
-    </div>
-    <!-- IMPORT -->
-    <div class="card">
-      <div class="card-title">📂 Importa da File</div>
-      <div style="font-size:13px;color:var(--text2);line-height:1.8;margin-bottom:16px">
-        Carica un file <code style="background:var(--bg4);padding:2px 6px;border-radius:4px;font-size:12px">.vitatrack.json</code> esportato in precedenza.
-        Scegli come gestire i dati esistenti:
-      </div>
-      <div class="fg">
-        <label>Modalità di Importazione</label>
-        <div class="pills" style="margin-bottom:0" id="import-mode-pills">
-          <div class="pill sel" data-v="merge" onclick="selImportMode(this)">🔀 Unisci (mantieni esistenti)</div>
-          <div class="pill" data-v="replace" onclick="selImportMode(this)">🔄 Sostituisci tutto</div>
-        </div>
-        <input type="hidden" id="import-mode" value="merge">
-      </div>
-      <div id="import-mode-desc" style="font-size:12px;color:var(--text3);margin-bottom:14px;line-height:1.6">
-        <b>Unisci:</b> aggiunge i log del file ai tuoi — i giorni già presenti vengono ignorati. Database cibi e ricette vengono sommati (no duplicati).
-      </div>
-      <label style="cursor:pointer;display:block">
-        <input type="file" id="import-file" accept=".json,.vitatrack.json" style="display:none" onchange="importData(this)">
-        <span class="btn btn-ghost" style="font-family:'DM Sans',sans-serif;font-size:13px;display:inline-flex;align-items:center;gap:6px">📂 Seleziona File .vitatrack.json</span>
-      </label>
-      <div id="import-status" style="margin-top:14px;font-size:13px;display:none"></div>
-    </div>
-  </div>
-  <!-- Info box -->
-  <div class="card" style="margin-top:14px">
-    <div class="card-title">ℹ️ Note sul Formato</div>
-    <div style="font-size:12.5px;color:var(--text2);line-height:1.9">
-      Il file <code style="background:var(--bg4);padding:2px 5px;border-radius:3px">.vitatrack.json</code> contiene un oggetto JSON con i campi:
-      <code style="background:var(--bg4);padding:2px 5px;border-radius:3px">profile</code>,
-      <code style="background:var(--bg4);padding:2px 5px;border-radius:3px">foodDb</code>,
-      <code style="background:var(--bg4);padding:2px 5px;border-radius:3px">recipes</code>,
-      <code style="background:var(--bg4);padding:2px 5px;border-radius:3px">weightLog</code>,
-      <code style="background:var(--bg4);padding:2px 5px;border-radius:3px">logs</code>.
-      È un formato aperto e leggibile — puoi modificarlo manualmente se necessario.
-      I backup sono compatibili tra versioni diverse dell'app.
-    </div>
-  </div>
-</section>
 
 </main>
 <div id="toast"></div>
@@ -978,13 +966,11 @@ function fmtDate(s){return new Date(s+'T12:00:00').toLocaleDateString('it-IT',{w
 function fmtDateShort(s){return new Date(s+'T12:00:00').toLocaleDateString('it-IT',{day:'numeric',month:'short'});}
 function renderSection(s){
   if(s==='dashboard')renderDash();
-  if(s==='profile')renderProfile();
+  if(s==='settings')renderSettings();
   if(s==='nutrition')renderNutr();
   if(s==='exercise')renderEx();
   if(s==='sleep')renderSleep();
   if(s==='neat')renderNeat();
-  if(s==='import')renderImport();
-  if(s==='dataio')renderDataIO();
 }
 
 // ════════════════════════════════════════════════════════════
@@ -1154,11 +1140,21 @@ function last7(){
 // ════════════════════════════════════════════════════════════
 // PROFILE
 // ════════════════════════════════════════════════════════════
-function renderProfile(){
+let settingsTab='profile';
+function setSettingsTab(t){
+  settingsTab=t;
+  ['profile','import','backup'].forEach(tab=>{
+    document.getElementById('st-'+tab).style.display=tab===t?'block':'none';
+    const el=document.querySelector(`.stab[onclick="setSettingsTab('${tab}')"]`);
+    if(el) el.classList.toggle('active',tab===t);
+  });
+  if(t==='import'){document.getElementById('imp-date').value=document.getElementById('imp-date').value||today();renderImportHistory();}
+  if(t==='backup') renderDataIO();
+}
+function renderSettings(){
   const p=S.profile;
   const fmap={'p-name':'name','p-age':'age','p-gender':'gender','p-height':'height','p-weight':'weight','p-twt':'targetWeight','p-act':'activityLevel','p-goal':'goal','p-water':'waterGoal','p-sleep':'sleepGoal','p-ckcal':'customKcal'};
   Object.entries(fmap).forEach(([id,k])=>{const el=document.getElementById(id);if(el)el.value=p[k]||'';});
-  // macro mode
   document.querySelectorAll('#macro-mode-pills .pill').forEach(pl=>pl.classList.toggle('sel',pl.dataset.v===(p.macroMode||'auto')));
   toggleMacroMode(p.macroMode||'auto');
   if(p.macroMode==='custom'){
@@ -1169,9 +1165,14 @@ function renderProfile(){
   }
   document.getElementById('p-notice').style.display=(!p.age||!p.height||!p.weight)?'block':'none';
   updateBMR();
-  renderWeightLog();
-  // set today's date in weight input
-  document.getElementById('wl-date').value=today();
+  // restore sub-tab
+  ['profile','import','backup'].forEach(tab=>{
+    document.getElementById('st-'+tab).style.display=tab===settingsTab?'block':'none';
+    const el=document.querySelector(`.stab[onclick="setSettingsTab('${tab}')"]`);
+    if(el) el.classList.toggle('active',tab===settingsTab);
+  });
+  if(settingsTab==='backup') renderDataIO();
+  if(settingsTab==='import') renderImportHistory();
 }
 function setMacroMode(el){
   document.querySelectorAll('#macro-mode-pills .pill').forEach(p=>p.classList.remove('sel'));
@@ -1269,22 +1270,67 @@ function rmWeight(date){
   save();renderWeightLog();updateBMR();
 }
 function renderWeightLog(){
-  const wl=[...S.weightLog].sort((a,b)=>b.date.localeCompare(a.date));
+  // Combine profile starting weight with log entries
+  const p=S.profile;
+  let allEntries=[...S.weightLog];
+  // If profile has a starting weight and it's not already in the log, show it as origin
+  if(p.weight && !allEntries.find(e=>e.isStart)){
+    const startDate=allEntries.length?allEntries.reduce((a,b)=>a.date<b.date?a:b).date:today();
+    // We don't add it to S.weightLog — just display it
+  }
+  const wl=[...allEntries].sort((a,b)=>b.date.localeCompare(a.date));
   destroyChart('wlc');
-  if(wl.length>1){
-    const sorted=[...wl].sort((a,b)=>a.date.localeCompare(b.date));
+
+  // Build chart data: seed with profile starting weight if no log entries for that date
+  const sortedForChart=[...allEntries].sort((a,b)=>a.date.localeCompare(b.date));
+  const chartEntries=p.weight?[{date:'Partenza',weight:p.weight,isStart:true},...sortedForChart]:sortedForChart;
+
+  if(chartEntries.length>1){
     charts['wlc']=new Chart(document.getElementById('wl-chart').getContext('2d'),{
-      type:'line',data:{labels:sorted.map(e=>fmtDateShort(e.date)),datasets:[
-        {data:sorted.map(e=>e.weight),borderColor:'var(--amber)',borderWidth:2,pointBackgroundColor:'var(--amber)',pointRadius:4,fill:false,tension:.3},
-        {data:Array(sorted.length).fill(S.profile.targetWeight||sorted[sorted.length-1].weight),type:'line',borderColor:'rgba(34,199,144,0.5)',borderDash:[5,4],borderWidth:1.5,pointRadius:0,fill:false,label:'Obiettivo'}
-      ]},options:{...CO,plugins:{legend:{display:false}}}
+      type:'line',data:{
+        labels:chartEntries.map(e=>e.isStart?'Partenza':fmtDateShort(e.date)),
+        datasets:[
+          {data:chartEntries.map(e=>e.weight),borderColor:'var(--amber)',borderWidth:2,pointBackgroundColor:'var(--amber)',pointRadius:4,fill:false,tension:.3},
+          {data:Array(chartEntries.length).fill(p.targetWeight||chartEntries[chartEntries.length-1].weight),
+            borderColor:'rgba(34,199,144,0.5)',borderDash:[5,4],borderWidth:1.5,pointRadius:0,fill:false}
+        ]
+      },options:{...CO,plugins:{legend:{display:false}}}
     });
   }
-  if(!wl.length){document.getElementById('wl-list').innerHTML='<div class="empty">Nessuna misurazione. Inizia aggiungendo il tuo peso!</div>';return;}
+
+  // Summary card
+  const cur=currentWeight(p);
+  const start=p.weight||cur;
+  const diff=round2(cur-start);
+  const goal=p.targetWeight;
+  const toGo=goal?round2(cur-goal):null;
+  const curEl=document.getElementById('wl-current');
+  if(curEl){
+    const diffColor=diff<0?'var(--green)':'var(--red)';
+    const diffTxt=diff!==0
+      ?` <span style="color:${diffColor};font-size:12px">${diff>0?'+':''}${diff} kg dal punto di partenza</span>`
+      :`<span style="font-size:12px;color:var(--text3)"> — invariato dal punto di partenza</span>`;
+    const goalTxt=goal
+      ?`<br>Obiettivo: <b style="color:var(--green)">${goal} kg</b> · Mancano: <span style="color:${toGo<=0?'var(--green)':'var(--amber)'}">${toGo>0?toGo+' kg':'✓ Obiettivo raggiunto!'}</span>`
+      :'';
+    curEl.innerHTML=`Peso attuale: <b style="color:var(--amber);font-size:16px">${cur} kg</b>${diffTxt}${goalTxt}`;
+  }
+
+  if(!wl.length){
+    document.getElementById('wl-list').innerHTML=`<div class="empty" style="padding:16px 0">Nessuna misurazione ancora.<br><span style="font-size:11px">Il punto di partenza (${start} kg) è impostato dal Profilo.</span></div>`;
+    return;
+  }
   document.getElementById('wl-list').innerHTML=wl.slice(0,15).map((e,i)=>{
-    const prev=wl[i+1];
-    const diff=prev?+(e.weight-prev.weight).toFixed(1):null;
-    return`<div class="wl-item"><div><div class="wl-date">${fmtDate(e.date)}</div></div><div style="display:flex;align-items:center;gap:8px"><div class="wl-kg">${e.weight} kg</div>${diff!==null?`<span class="wl-diff" style="color:${diff>0?'var(--red)':'var(--green)'}">${diff>0?'+':''}${diff}kg</span>`:''}<button class="btn-icon" onclick="rmWeight('${e.date}')">×</button></div></div>`;
+    const prev=wl[i+1]||(p.weight?{weight:p.weight}:null);
+    const diff2=prev?round2(e.weight-prev.weight):null;
+    return`<div class="wl-item">
+      <div><div class="wl-date">${fmtDate(e.date)}</div></div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="wl-kg">${e.weight} kg</div>
+        ${diff2!==null?`<span class="wl-diff" style="color:${diff2>0?'var(--red)':'var(--green)'}">${diff2>0?'+':''}${diff2} kg</span>`:''}
+        <button class="btn-icon" onclick="rmWeight('${e.date}')">×</button>
+      </div>
+    </div>`;
   }).join('');
 }
 
@@ -1293,11 +1339,12 @@ function renderWeightLog(){
 // ════════════════════════════════════════════════════════════
 function setNutrTab(t){
   nutrTab=t;
-  ['diary','db','recipes'].forEach(tab=>{
+  ['diary','weight','db','recipes'].forEach(tab=>{
     document.getElementById('n-tab-'+tab).style.display=tab===t?'block':'none';
     document.querySelector(`.stab[onclick="setNutrTab('${tab}')"]`).classList.toggle('active',tab===t);
   });
   if(t==='diary')renderNutr();
+  if(t==='weight'){document.getElementById('wl-date').value=today();renderWeightLog();}
   if(t==='db')renderFoodDb();
   if(t==='recipes')renderRecipes();
 }
@@ -1721,10 +1768,6 @@ function rmNeat(id){const l=getLog(curDate);l.neat=l.neat.filter(n=>n.id!==id);s
 // ════════════════════════════════════════════════════════════
 // IMPORT RAPIDO
 // ════════════════════════════════════════════════════════════
-function renderImport(){
-  document.getElementById('imp-date').value=document.getElementById('imp-date').value||today();
-  renderImportHistory();
-}
 function doImport(){
   const date=document.getElementById('imp-date').value;
   if(!date){toast('⚠️ Seleziona una data',true);return;}
@@ -1808,16 +1851,8 @@ let lastScannedFood = null;
 let nativeDetector = null;
 let liveRafId = null;
 
-// Init BarcodeDetector once if available
-if(window.BarcodeDetector){
-  BarcodeDetector.getSupportedFormats().then(fmts => {
-    const wanted = ['ean_13','ean_8','upc_a','upc_e','code_128','code_39','qr_code'];
-    const use = wanted.filter(f => fmts.includes(f));
-    nativeDetector = new BarcodeDetector({ formats: use.length ? use : fmts });
-  }).catch(() => {
-    nativeDetector = new BarcodeDetector();
-  });
-}
+// Check BarcodeDetector availability synchronously — init happens inside startLiveCamera
+const hasBarcodeDetector = typeof BarcodeDetector !== 'undefined';
 
 function openScanner(ctx){
   scannerCtx = ctx;
@@ -1835,10 +1870,8 @@ function openScanner(ctx){
   const isHTTPS = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
 
   if(isHTTPS && navigator.mediaDevices && navigator.mediaDevices.getUserMedia){
-    // Try live camera first on HTTPS
     startLiveCamera();
   } else {
-    // file:// or HTTP → photo mode immediately, no error
     showPhotoMode(location.protocol === 'file:'
       ? 'Scatta una foto del barcode con la fotocamera oppure inserisci il codice manualmente.\n(La fotocamera live richiede HTTPS — disponibile nella versione PWA.)'
       : 'Scatta una foto del barcode oppure inserisci il codice numerico stampato sotto il barcode.'
@@ -1862,6 +1895,18 @@ async function startLiveCamera(){
   document.getElementById('scan-live').style.display = 'flex';
   document.getElementById('scan-photo').style.display = 'none';
   setStatus('Avvio fotocamera...', '');
+
+  // Init detector HERE (not at page load) — eliminates the race condition
+  if(hasBarcodeDetector && !nativeDetector){
+    try {
+      const fmts = await BarcodeDetector.getSupportedFormats();
+      const wanted = ['ean_13','ean_8','upc_a','upc_e','code_128','code_39','qr_code'];
+      const use = wanted.filter(f => fmts.includes(f));
+      nativeDetector = new BarcodeDetector({ formats: use.length ? use : fmts });
+    } catch(e){
+      try { nativeDetector = new BarcodeDetector(); } catch(e2){}
+    }
+  }
 
   const constraints = [
     { video: { facingMode: { ideal:'environment' }, width:{ideal:1280}, height:{ideal:720} } },
@@ -1953,6 +1998,16 @@ async function handleImageFile(input){
     ctx2d.drawImage(img, 0, 0);
 
     let barcode = null;
+
+    // Init detector if not yet done
+    if(hasBarcodeDetector && !nativeDetector){
+      try {
+        const fmts = await BarcodeDetector.getSupportedFormats();
+        const wanted = ['ean_13','ean_8','upc_a','upc_e','code_128','code_39','qr_code'];
+        const use = wanted.filter(f => fmts.includes(f));
+        nativeDetector = new BarcodeDetector({ formats: use.length ? use : fmts });
+      } catch(e){ try { nativeDetector = new BarcodeDetector(); } catch(e2){} }
+    }
 
     // Try native BarcodeDetector
     if(nativeDetector){
@@ -2283,7 +2338,7 @@ document.getElementById('wl-date').value=today();
 document.getElementById('sb-date').textContent=new Date().toLocaleDateString('it-IT',{day:'numeric',month:'long',year:'numeric'});
 // Show period toggle state
 document.getElementById('d-vtoggle').style.display='none';
-if(!S.profile.name||!S.profile.age){setTimeout(()=>nav('profile'),400);}
+if(!S.profile.name||!S.profile.age){setTimeout(()=>nav('settings'),400);}
 
 // ════════════════════════════════════════════════════════════
 // PWA — SERVICE WORKER + INSTALL PROMPT
