@@ -502,6 +502,9 @@ textarea{resize:vertical;min-height:60px}
     <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="addWeightMobile()">💾 Salva Misurazione</button>
   </div>
 </div>
+
+<!-- Sleep quick add -->
+<div class="m-modal" id="m-modal-sleep">
   <div class="m-modal-hd"><h2>😴 Sonno</h2><button class="m-modal-close" onclick="closeMModal('sleep')">×</button></div>
   <div class="m-modal-body">
     <div class="fr">
@@ -2464,7 +2467,6 @@ async function handleImageFile(input){
     input.value='';
   };
   img.onerror = () => { setStatus('⚠️ Impossibile leggere l\'immagine.','var(--red)'); input.value=''; URL.revokeObjectURL(url); };
-  };
   img.src = url;
 }
 
@@ -3253,8 +3255,14 @@ window.addEventListener('resize', ()=>{
 // PWA — SERVICE WORKER + INSTALL PROMPT
 // ════════════════════════════════════════════════════════════
 if('serviceWorker' in navigator){
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./service-worker.js')
+  // Only register SW on the real deployed domain (not preview environments)
+  const swAllowed = location.protocol === 'https:' &&
+    !location.hostname.includes('claudeusercontent.com') &&
+    !location.hostname.includes('claude.ai') &&
+    location.hostname !== '';
+  if(swAllowed){
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./service-worker.js')
       .then(reg => {
         reg.addEventListener('updatefound', () => {
           const nw = reg.installing;
@@ -3270,8 +3278,9 @@ if('serviceWorker' in navigator){
         });
       })
       .catch(e => console.warn('[VitaTrack] SW:', e.message));
-  });
-}
+    });
+  } // end swAllowed
+} // end serviceWorker check
 
 let _dip = null;
 window.addEventListener('beforeinstallprompt', e => {
