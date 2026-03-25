@@ -676,7 +676,25 @@ textarea{resize:vertical;min-height:60px}
     <div class="g2" style="margin-bottom:20px">
       <div class="card">
         <div class="card-title">📥 Import Rapido Giornata</div>
-        <div class="fg"><label>Data</label><input id="imp-date" type="date"></div>
+        <div class="fg">
+          <label>Modalità Inserimento</label>
+          <div class="pills" id="imp-mode-pills">
+            <div class="pill sel" data-v="single" onclick="setImpMode(this)">📅 Giorno singolo</div>
+            <div class="pill" data-v="period" onclick="setImpMode(this)">📆 Periodo (da→a)</div>
+          </div>
+        </div>
+        <!-- Single day -->
+        <div id="imp-single">
+          <div class="fg"><label>Data</label><input id="imp-date" type="date"></div>
+        </div>
+        <!-- Period -->
+        <div id="imp-period" style="display:none">
+          <div class="fr">
+            <div class="fg"><label>Data Inizio</label><input id="imp-from" type="date"></div>
+            <div class="fg"><label>Data Fine</label><input id="imp-to" type="date"></div>
+          </div>
+          <div style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.6">I valori inseriti saranno applicati come media giornaliera a ogni giorno del periodo. I giorni già esistenti vengono saltati.</div>
+        </div>
         <div class="div"></div>
         <div class="card-title">Alimentazione</div>
         <div class="fr3">
@@ -1580,14 +1598,17 @@ function updateBMR(){
 
 // WEIGHT LOG
 function addWeight(){
-  const date=document.getElementById('wl-date').value;
-  const weight=parseFloat(document.getElementById('wl-weight').value);
+  // Called from mobile modal (uses mw-date / mw-kg) or desktop weight tab if present
+  const dateEl=document.getElementById('wl-date');
+  const weightEl=document.getElementById('wl-weight');
+  if(!dateEl||!weightEl) return; // elements removed — use addWeightMobile() instead
+  const date=dateEl.value;
+  const weight=parseFloat(weightEl.value);
   if(!date||!weight){toast('⚠️ Inserisci data e peso',true);return;}
-  // remove existing entry for same date
   S.weightLog=S.weightLog.filter(e=>e.date!==date);
   S.weightLog.push({date,weight});
   S.weightLog.sort((a,b)=>a.date.localeCompare(b.date));
-  document.getElementById('wl-weight').value='';
+  weightEl.value='';
   save();renderWeightLog();updateBMR();toast('✅ Peso registrato!');
 }
 function rmWeight(date){
@@ -1595,6 +1616,11 @@ function rmWeight(date){
   save();renderWeightLog();updateBMR();
 }
 function renderWeightLog(){
+  // Guard: elements may not exist if weight tab is hidden/removed
+  const chartEl=document.getElementById('wl-chart');
+  const listEl=document.getElementById('wl-list');
+  const curEl=document.getElementById('wl-current');
+  if(!chartEl&&!listEl&&!curEl) return; // silently skip
   // Combine profile starting weight with log entries
   const p=S.profile;
   let allEntries=[...S.weightLog];
@@ -1610,8 +1636,8 @@ function renderWeightLog(){
   const sortedForChart=[...allEntries].sort((a,b)=>a.date.localeCompare(b.date));
   const chartEntries=p.weight?[{date:'Partenza',weight:p.weight,isStart:true},...sortedForChart]:sortedForChart;
 
-  if(chartEntries.length>1){
-    charts['wlc']=new Chart(document.getElementById('wl-chart').getContext('2d'),{
+  if(chartEntries.length>1 && chartEl){
+    charts['wlc']=new Chart(chartEl.getContext('2d'),{
       type:'line',data:{
         labels:chartEntries.map(e=>e.isStart?'Partenza':fmtDateShort(e.date)),
         datasets:[
@@ -1629,7 +1655,7 @@ function renderWeightLog(){
   const diff=round2(cur-start);
   const goal=p.targetWeight;
   const toGo=goal?round2(cur-goal):null;
-  const curEl=document.getElementById('wl-current');
+  // curEl already declared at top of function
   if(curEl){
     const diffColor=diff<0?'var(--green)':'var(--red)';
     const diffTxt=diff!==0
@@ -1642,10 +1668,10 @@ function renderWeightLog(){
   }
 
   if(!wl.length){
-    document.getElementById('wl-list').innerHTML=`<div class="empty" style="padding:16px 0">Nessuna misurazione ancora.<br><span style="font-size:11px">Il punto di partenza (${start} kg) è impostato dal Profilo.</span></div>`;
+    if(listEl) listEl.innerHTML=`<div class="empty" style="padding:16px 0">Nessuna misurazione ancora.<br><span style="font-size:11px">Il punto di partenza (${start} kg) è impostato dal Profilo.</span></div>`;
     return;
   }
-  document.getElementById('wl-list').innerHTML=wl.slice(0,15).map((e,i)=>{
+  if(listEl) listEl.innerHTML=wl.slice(0,15).map((e,i)=>{
     const prev=wl[i+1]||(p.weight?{weight:p.weight}:null);
     const diff2=prev?round2(e.weight-prev.weight):null;
     return`<div class="wl-item">
@@ -2110,10 +2136,21 @@ function rmNeat(id){const l=getLog(curDate);l.neat=l.neat.filter(n=>n.id!==id);s
 // ════════════════════════════════════════════════════════════
 // IMPORT RAPIDO
 // ════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════
+// IMPORT RAPIDO
+// ════════════════════════════════════════════════════════════
+function setImpMode(el){
+  document.querySelectorAll('#imp-mode-pills .pill').forEach(p=>p.classList.remove('sel'));
+  el.classList.add('sel');
+  const mode=el.dataset.v;
+  document.getElementById('imp-single').style.display=mode==='single'?'block':'none';
+  document.getElementById('imp-period').style.display=mode==='period'?'block':'none';
+}
+
 function doImport(){
-  const date=document.getElementById('imp-date').value;
-  if(!date){toast('⚠️ Seleziona una data',true);return;}
-  if(date>today()){toast('⚠️ Non puoi importare date future',true);return;}
+  const modePill=document.querySelector('#imp-mode-pills .pill.sel');
+  const mode=modePill?modePill.dataset.v:'single';
+
   const kcal=parseFloat(document.getElementById('imp-kcal').value)||0;
   const pro=round2(parseFloat(document.getElementById('imp-pro').value)||0);
   const carb=round2(parseFloat(document.getElementById('imp-carb').value)||0);
@@ -2123,29 +2160,61 @@ function doImport(){
   const exkcal=parseFloat(document.getElementById('imp-exkcal').value)||0;
   const sleepH=parseFloat(document.getElementById('imp-sleep').value)||0;
   const notes=document.getElementById('imp-notes').value.trim();
+
   if(!kcal&&!pro&&!carb&&!fat){toast('⚠️ Inserisci almeno le calorie',true);return;}
-  const l=getLog(date);
-  // Remove previous import entry if exists, keep manual entries
-  l.nutrition.meals=l.nutrition.meals.filter(m=>!m.isImport);
-  // Add aggregate import meal entry
-  if(kcal||pro||carb||fat){
-    l.nutrition.meals.push({
-      id:'imp_'+date,name:'📥 Import rapido'+(notes?' — '+notes:''),
-      kcal,pro,carb,fat,qty:0,slot:'lunch',isImport:true
-    });
+
+  // Build list of dates to import
+  let dates=[];
+  if(mode==='period'){
+    const from=document.getElementById('imp-from').value;
+    const to=document.getElementById('imp-to').value;
+    if(!from||!to){toast('⚠️ Seleziona data inizio e fine',true);return;}
+    if(from>to){toast('⚠️ Data inizio deve essere prima della fine',true);return;}
+    if(to>today()){toast('⚠️ Non puoi importare date future',true);return;}
+    const cur=new Date(from+'T12:00:00');
+    const end=new Date(to+'T12:00:00');
+    while(cur<=end){
+      dates.push(cur.toISOString().split('T')[0]);
+      cur.setDate(cur.getDate()+1);
+    }
+  } else {
+    const date=document.getElementById('imp-date').value;
+    if(!date){toast('⚠️ Seleziona una data',true);return;}
+    if(date>today()){toast('⚠️ Non puoi importare date future',true);return;}
+    dates=[date];
   }
-  if(water>0) l.nutrition.water=water;
-  if(steps>0) l.steps=steps;
-  if(sleepH>0) l.sleep={...l.sleep,hours:sleepH,quality:3,bedtime:'23:00',wakeup:'07:00',notes:'(Import rapido)'};
-  if(exkcal>0){
-    l.exercise=l.exercise.filter(e=>!e.isImport);
-    l.exercise.push({id:'impex_'+date,name:'🏃 Attività (import)',dur:0,kcal:exkcal,type:'other',intensity:'mid',time:'',notes:'Import rapido',isImport:true});
-  }
+
+  let imported=0, skipped=0;
+  dates.forEach(date=>{
+    const l=getLog(date);
+    // Skip days that already have an import entry (don't overwrite existing)
+    if(mode==='period' && l.nutrition.meals.some(m=>m.isImport)){skipped++;return;}
+    // Remove previous import entry for same date in single mode
+    l.nutrition.meals=l.nutrition.meals.filter(m=>!m.isImport);
+    if(kcal||pro||carb||fat){
+      l.nutrition.meals.push({
+        id:'imp_'+date,name:'📥 Import rapido'+(notes?' — '+notes:''),
+        kcal,pro,carb,fat,qty:0,slot:'lunch',isImport:true
+      });
+    }
+    if(water>0) l.nutrition.water=water;
+    if(steps>0) l.steps=steps;
+    if(sleepH>0) l.sleep={...l.sleep,hours:sleepH,quality:3,bedtime:'23:00',wakeup:'07:00',notes:'(Import rapido)'};
+    if(exkcal>0){
+      l.exercise=l.exercise.filter(e=>!e.isImport);
+      l.exercise.push({id:'impex_'+date,name:'🏃 Attività (import)',dur:0,kcal:exkcal,type:'other',intensity:'mid',time:'',notes:'Import rapido',isImport:true});
+    }
+    imported++;
+  });
+
   save();
-  // clear form
   ['imp-kcal','imp-pro','imp-carb','imp-fat','imp-water','imp-steps','imp-exkcal','imp-sleep','imp-notes'].forEach(id=>document.getElementById(id).value='');
+
   renderImportHistory();
-  toast('✅ Giornata importata: '+fmtDate(date));
+  const msg=mode==='period'
+    ?`✅ ${imported} giorni importati${skipped?' ('+skipped+' saltati — già presenti)':''}`
+    :`✅ Giornata importata: ${fmtDate(dates[0])}`;
+  toast(msg);
 }
 function rmImport(date){
   const l=S.logs[date];
@@ -2735,11 +2804,12 @@ load();
 renderDash();
 const hn=new Date().getHours(),mn=new Date().getMinutes();
 document.getElementById('ex-time').value=`${String(hn).padStart(2,'0')}:${String(mn).padStart(2,'0')}`;
-document.getElementById('wl-date').value=today();
 document.getElementById('sb-date').textContent=new Date().toLocaleDateString('it-IT',{day:'numeric',month:'long',year:'numeric'});
-// Show period toggle state
 document.getElementById('d-vtoggle').style.display='none';
 if(!S.profile.name||!S.profile.age){setTimeout(()=>nav('settings'),400);}
+// Mobile dashboard — called here because isMobile() (const) is defined later in the file
+// Use window.innerWidth directly to avoid the hoisting issue
+setTimeout(()=>{ if(window.innerWidth<=767) renderMDash(); }, 0);
 
 // ════════════════════════════════════════════════════════════
 // MOBILE UI
