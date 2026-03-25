@@ -575,8 +575,7 @@ textarea{resize:vertical;min-height:60px}
   <div class="ph"><h1>Impostazioni</h1><p>Profilo, import rapido e backup dati</p></div>
   <div class="stab-bar">
     <div class="stab active" onclick="setSettingsTab('profile')">👤 Profilo</div>
-    <div class="stab" onclick="setSettingsTab('import')">📥 Import Rapido</div>
-    <div class="stab" onclick="setSettingsTab('backup')">💾 Backup</div>
+    <div class="stab" onclick="setSettingsTab('importexport')">📦 Import &amp; Export</div>
   </div>
 
   <!-- ── PROFILO ── -->
@@ -670,12 +669,13 @@ textarea{resize:vertical;min-height:60px}
     </div>
   </div>
 
-  <!-- ── IMPORT RAPIDO ── -->
-  <div id="st-import" style="display:none">
-    <div class="notice">💡 Inserisci i totali di una giornata passata in pochi secondi — senza dettaglio pasto per pasto.</div>
-    <div class="g2">
+  <!-- ── IMPORT & EXPORT ── -->
+  <div id="st-importexport" style="display:none">
+    <!-- Import Rapido -->
+    <div class="notice" style="margin-bottom:18px">💡 Inserisci i totali di una giornata passata in pochi secondi — senza dettaglio pasto per pasto.</div>
+    <div class="g2" style="margin-bottom:20px">
       <div class="card">
-        <div class="card-title">Dati Giornata</div>
+        <div class="card-title">📥 Import Rapido Giornata</div>
         <div class="fg"><label>Data</label><input id="imp-date" type="date"></div>
         <div class="div"></div>
         <div class="card-title">Alimentazione</div>
@@ -698,20 +698,10 @@ textarea{resize:vertical;min-height:60px}
         <div class="fg"><label>Note</label><textarea id="imp-notes" placeholder="Es. giornata di lavoro, pasto fuori..."></textarea></div>
         <button class="btn btn-primary" onclick="doImport()">📥 Importa Giornata</button>
       </div>
-      <div>
-        <div class="card" style="margin-bottom:14px">
-          <div class="card-title">Come funziona</div>
-          <div style="font-size:13px;color:var(--text2);line-height:1.8">
-            Crea una <span style="color:var(--amber);font-weight:600">voce aggregata</span> nel diario. Se il giorno ha già dati, la voce import viene aggiornata mantenendo i dettagli esistenti.
-          </div>
-        </div>
-        <div class="card"><div class="card-title">Giorni Importati</div><div id="imp-history"></div></div>
-      </div>
+      <div class="card"><div class="card-title">Giorni Importati</div><div id="imp-history"></div></div>
     </div>
-  </div>
-
-  <!-- ── BACKUP ── -->
-  <div id="st-backup" style="display:none">
+    <div class="div"></div>
+    <!-- Backup -->
     <div class="g2">
       <div class="card">
         <div class="card-title">📤 Esporta Dati</div>
@@ -749,9 +739,7 @@ textarea{resize:vertical;min-height:60px}
   </div>
   <div class="stab-bar">
     <div class="stab active" onclick="setNutrTab('diary')">📓 Diario</div>
-    <div class="stab" onclick="setNutrTab('weight')">⚖️ Peso</div>
-    <div class="stab" onclick="setNutrTab('db')">🗃 Database Cibi</div>
-    <div class="stab" onclick="setNutrTab('recipes')">📖 Ricette</div>
+    <div class="stab" onclick="setNutrTab('products')">🗃 Prodotti &amp; Ricette</div>
   </div>
 
   <!-- DIARY -->
@@ -828,87 +816,63 @@ textarea{resize:vertical;min-height:60px}
     </div>
   </div>
 
-  <!-- PESO -->
-  <div id="n-tab-weight" style="display:none">
+  <!-- PRODOTTI & RICETTE -->
+  <div id="n-tab-products" style="display:none">
     <div class="g2">
-      <div class="card">
-        <div class="card-title">⚖️ Registra Peso</div>
-        <div style="font-size:12.5px;color:var(--text2);margin-bottom:14px;line-height:1.6">
-          Il <b>peso di partenza</b> è impostato in Impostazioni → Profilo e costituisce il primo punto del grafico.<br>
-          Aggiungi qui le misurazioni successive ogni volta che ti pesi.
-        </div>
-        <div class="fr" style="align-items:flex-end;margin-bottom:12px">
-          <div class="fg" style="margin:0"><label>Data</label><input id="wl-date" type="date"></div>
-          <div class="fg" style="margin:0"><label>Peso (kg)</label><input id="wl-weight" type="number" placeholder="70.5" step="0.1" min="30" max="300"></div>
-        </div>
-        <button class="btn btn-primary btn-sm" onclick="addWeight()" style="margin-bottom:6px">+ Aggiungi Misurazione</button>
-        <div id="wl-current" style="margin-top:14px;padding:12px;background:var(--bg3);border-radius:var(--rsm);border:1px solid var(--border);font-size:13px;color:var(--text2)"></div>
-      </div>
-      <div class="card">
-        <div class="card-title">Andamento Peso</div>
-        <div class="cw" style="margin-bottom:14px"><canvas id="wl-chart"></canvas></div>
-        <div id="wl-list"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- DATABASE CIBI -->
-  <div id="n-tab-db" style="display:none">
-    <div class="g2">
-      <div class="card">
-        <div class="card-title">+ Nuovo Alimento nel Database</div>
-        <div class="fr">
-          <div class="fg"><label>Nome Alimento</label><input id="db-name" type="text" placeholder="es. Avena"></div>
-          <div class="fg"><label>Categoria</label><select id="db-cat"><option value="cereali">🌾 Cereali &amp; Pasta</option><option value="carne">🥩 Carne &amp; Pesce</option><option value="latticini">🧀 Latticini &amp; Uova</option><option value="verdure">🥦 Verdure</option><option value="frutta">🍎 Frutta</option><option value="legumi">🫘 Legumi</option><option value="grassi">🫒 Grassi &amp; Oli</option><option value="dolci">🍫 Dolci &amp; Snack</option><option value="bevande">🥤 Bevande</option><option value="altro">• Altro</option></select></div>
-        </div>
-        <div style="margin-bottom:12px">
-          <button class="btn btn-ghost btn-sm" onclick="openScanner('db')" style="font-size:15px">📷 Scansiona codice a barre per precompilare</button>
-        </div>
-        <div style="font-size:11.5px;color:var(--text3);margin-bottom:10px">Valori per 100g di prodotto</div>
-        <div class="fr3">
-          <div class="fg"><label>Calorie (kcal/100g)</label><input id="db-kcal" type="number" placeholder="350" min="0"></div>
-          <div class="fg"><label>Proteine (g)</label><input id="db-pro" type="number" placeholder="13" min="0" step="0.1"></div>
-          <div class="fg"><label>Carboidrati (g)</label><input id="db-carb" type="number" placeholder="60" min="0" step="0.1"></div>
-        </div>
-        <div class="fr">
-          <div class="fg"><label>Grassi (g)</label><input id="db-fat" type="number" placeholder="7" min="0" step="0.1"></div>
-          <div class="fg"><label>Fibre (g, facolt.)</label><input id="db-fiber" type="number" placeholder="10" min="0" step="0.1"></div>
-        </div>
-        <button class="btn btn-primary" onclick="saveNewFood()">💾 Salva nel Database</button>
-      </div>
-      <div class="card">
-        <div class="card-title">Database Cibi Salvati <span id="db-count" class="badge ba"></span></div>
-        <input id="db-search" type="text" placeholder="Cerca nel database..." oninput="renderFoodDb()" style="margin-bottom:12px">
-        <div id="db-list"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- RICETTE -->
-  <div id="n-tab-recipes" style="display:none">
-    <div class="g2">
-      <div class="card">
-        <div class="card-title">+ Crea Nuova Ricetta</div>
-        <div class="fg"><label>Nome Ricetta</label><input id="rc-name" type="text" placeholder="es. Porridge mattutino"></div>
-        <div class="fg"><label>Categoria</label><select id="rc-cat"><option value="breakfast">🌅 Colazione</option><option value="lunch">☀️ Pranzo</option><option value="snack">🍪 Spuntino</option><option value="dinner">🌙 Cena</option></select></div>
-        <div class="fg"><label>Aggiungi Ingrediente dal Database</label>
-          <div class="food-suggest">
-            <input id="rc-ing-name" type="text" placeholder="Cerca alimento..." autocomplete="off" oninput="recSearch(this.value)">
-            <div class="fs-list" id="rc-suggest"></div>
+      <!-- DB Cibi -->
+      <div>
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-title">+ Nuovo Alimento nel Database</div>
+          <div class="fr">
+            <div class="fg"><label>Nome Alimento</label><input id="db-name" type="text" placeholder="es. Avena"></div>
+            <div class="fg"><label>Categoria</label><select id="db-cat"><option value="cereali">🌾 Cereali &amp; Pasta</option><option value="carne">🥩 Carne &amp; Pesce</option><option value="latticini">🧀 Latticini &amp; Uova</option><option value="verdure">🥦 Verdure</option><option value="frutta">🍎 Frutta</option><option value="legumi">🫘 Legumi</option><option value="grassi">🫒 Grassi &amp; Oli</option><option value="dolci">🍫 Dolci &amp; Snack</option><option value="bevande">🥤 Bevande</option><option value="altro">• Altro</option></select></div>
           </div>
+          <div style="margin-bottom:12px">
+            <button class="btn btn-ghost btn-sm" onclick="openScanner('db')" style="font-size:15px">📷 Scansiona codice a barre per precompilare</button>
+          </div>
+          <div style="font-size:11.5px;color:var(--text3);margin-bottom:10px">Valori per 100g di prodotto</div>
+          <div class="fr3">
+            <div class="fg"><label>Calorie (kcal/100g)</label><input id="db-kcal" type="number" placeholder="350" min="0"></div>
+            <div class="fg"><label>Proteine (g)</label><input id="db-pro" type="number" placeholder="13" min="0" step="0.1"></div>
+            <div class="fg"><label>Carboidrati (g)</label><input id="db-carb" type="number" placeholder="60" min="0" step="0.1"></div>
+          </div>
+          <div class="fr">
+            <div class="fg"><label>Grassi (g)</label><input id="db-fat" type="number" placeholder="7" min="0" step="0.1"></div>
+            <div class="fg"><label>Fibre (g, facolt.)</label><input id="db-fiber" type="number" placeholder="10" min="0" step="0.1"></div>
+          </div>
+          <button class="btn btn-primary" onclick="saveNewFood()">💾 Salva nel Database</button>
         </div>
-        <div class="fr" style="margin-bottom:10px">
-          <div class="fg"><label>Quantità (g)</label><input id="rc-ing-g" type="number" placeholder="50" min="0"></div>
-          <div style="display:flex;align-items:flex-end;padding-bottom:14px"><button class="btn btn-ghost btn-sm" onclick="addRecipeIng()">+ Aggiungi</button></div>
+        <div class="card">
+          <div class="card-title">Database Cibi Salvati <span id="db-count" class="badge ba"></span></div>
+          <input id="db-search" type="text" placeholder="Cerca nel database..." oninput="renderFoodDb()" style="margin-bottom:12px">
+          <div id="db-list"></div>
         </div>
-        <div id="rc-ing-list" style="min-height:40px;margin-bottom:12px"></div>
-        <div id="rc-preview" style="font-size:12.5px;color:var(--text2);background:var(--bg4);padding:10px;border-radius:var(--rsm);margin-bottom:12px"></div>
-        <div class="fg"><label>Note (facoltativo)</label><textarea id="rc-notes" placeholder="Preparazione, varianti..."></textarea></div>
-        <button class="btn btn-primary" onclick="saveRecipe()">💾 Salva Ricetta</button>
       </div>
-      <div class="card">
-        <div class="card-title">Ricette Salvate <span id="rc-count" class="badge ba"></span></div>
-        <div id="rc-list"></div>
+      <!-- Ricette -->
+      <div>
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-title">+ Crea Nuova Ricetta</div>
+          <div class="fg"><label>Nome Ricetta</label><input id="rc-name" type="text" placeholder="es. Porridge mattutino"></div>
+          <div class="fg"><label>Categoria</label><select id="rc-cat"><option value="breakfast">🌅 Colazione</option><option value="lunch">☀️ Pranzo</option><option value="snack">🍪 Spuntino</option><option value="dinner">🌙 Cena</option></select></div>
+          <div class="fg"><label>Aggiungi Ingrediente dal Database</label>
+            <div class="food-suggest">
+              <input id="rc-ing-name" type="text" placeholder="Cerca alimento..." autocomplete="off" oninput="recSearch(this.value)">
+              <div class="fs-list" id="rc-suggest"></div>
+            </div>
+          </div>
+          <div class="fr" style="margin-bottom:10px">
+            <div class="fg"><label>Quantità (g)</label><input id="rc-ing-g" type="number" placeholder="50" min="0"></div>
+            <div style="display:flex;align-items:flex-end;padding-bottom:14px"><button class="btn btn-ghost btn-sm" onclick="addRecipeIng()">+ Aggiungi</button></div>
+          </div>
+          <div id="rc-ing-list" style="min-height:40px;margin-bottom:12px"></div>
+          <div id="rc-preview" style="font-size:12.5px;color:var(--text2);background:var(--bg4);padding:10px;border-radius:var(--rsm);margin-bottom:12px"></div>
+          <div class="fg"><label>Note (facoltativo)</label><textarea id="rc-notes" placeholder="Preparazione, varianti..."></textarea></div>
+          <button class="btn btn-primary" onclick="saveRecipe()">💾 Salva Ricetta</button>
+        </div>
+        <div class="card">
+          <div class="card-title">Ricette Salvate <span id="rc-count" class="badge ba"></span></div>
+          <div id="rc-list"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -1502,13 +1466,16 @@ function last7(){
 let settingsTab='profile';
 function setSettingsTab(t){
   settingsTab=t;
-  ['profile','import','backup'].forEach(tab=>{
+  ['profile','importexport'].forEach(tab=>{
     document.getElementById('st-'+tab).style.display=tab===t?'block':'none';
     const el=document.querySelector(`.stab[onclick="setSettingsTab('${tab}')"]`);
     if(el) el.classList.toggle('active',tab===t);
   });
-  if(t==='import'){document.getElementById('imp-date').value=document.getElementById('imp-date').value||today();renderImportHistory();}
-  if(t==='backup') renderDataIO();
+  if(t==='importexport'){
+    document.getElementById('imp-date').value=document.getElementById('imp-date').value||today();
+    renderImportHistory();
+    renderDataIO();
+  }
 }
 function renderSettings(){
   const p=S.profile;
@@ -1525,13 +1492,12 @@ function renderSettings(){
   document.getElementById('p-notice').style.display=(!p.age||!p.height||!p.weight)?'block':'none';
   updateBMR();
   // restore sub-tab
-  ['profile','import','backup'].forEach(tab=>{
+  ['profile','importexport'].forEach(tab=>{
     document.getElementById('st-'+tab).style.display=tab===settingsTab?'block':'none';
     const el=document.querySelector(`.stab[onclick="setSettingsTab('${tab}')"]`);
     if(el) el.classList.toggle('active',tab===settingsTab);
   });
-  if(settingsTab==='backup') renderDataIO();
-  if(settingsTab==='import') renderImportHistory();
+  if(settingsTab==='importexport'){ renderDataIO(); renderImportHistory(); }
 }
 function setMacroMode(el){
   document.querySelectorAll('#macro-mode-pills .pill').forEach(p=>p.classList.remove('sel'));
@@ -1698,14 +1664,12 @@ function renderWeightLog(){
 // ════════════════════════════════════════════════════════════
 function setNutrTab(t){
   nutrTab=t;
-  ['diary','weight','db','recipes'].forEach(tab=>{
+  ['diary','products'].forEach(tab=>{
     document.getElementById('n-tab-'+tab).style.display=tab===t?'block':'none';
     document.querySelector(`.stab[onclick="setNutrTab('${tab}')"]`).classList.toggle('active',tab===t);
   });
   if(t==='diary')renderNutr();
-  if(t==='weight'){document.getElementById('wl-date').value=today();renderWeightLog();}
-  if(t==='db')renderFoodDb();
-  if(t==='recipes')renderRecipes();
+  if(t==='products'){renderFoodDb();renderRecipes();}
 }
 
 function renderNutr(){
