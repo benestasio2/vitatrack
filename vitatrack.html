@@ -285,14 +285,18 @@ textarea{resize:vertical;min-height:60px}
 .bottom-nav{
   display:none;
   position:fixed;
-  bottom:0; left:0; right:0;
+
+  bottom: env(safe-area-inset-bottom, 0px);
+  left:0;
+  right:0;
+
+  height:62px;
   width:100%;
+
   transform: translateZ(0);
   will-change: transform;
   backface-visibility: hidden;
 
-  height:calc(62px + env(safe-area-inset-bottom, 0px));
-  padding-bottom:env(safe-area-inset-bottom, 0px);
   background:var(--bg2);
   border-top:1px solid var(--border2);
   z-index:500;
