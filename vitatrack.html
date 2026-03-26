@@ -228,50 +228,73 @@ textarea{resize:vertical;min-height:60px}
    MOBILE LAYOUT  <768px
 ══════════════════════════════════════════════════════════ */
 @media(max-width:767px){
+  /* Override desktop flex/height model — let body scroll naturally */
+  html { height: auto !important; }
+  body {
+    height: auto !important;
+    min-height: 100vh;
+    display: block !important;
+    overflow-y: auto !important;
+    overflow-x: hidden;
+  }
+  /* Main: full width, no left margin, natural height, bottom padding for fixed nav */
+  .main {
+    margin-left: 0 !important;
+    padding: 14px 14px 80px !important;
+    overflow-y: visible !important;
+    overflow-x: hidden;
+    min-height: calc(100vh - 62px);
+    height: auto !important;
+    flex: none !important;
+  }
   /* Hide desktop sidebar entirely */
-  .sidebar{display:none!important}
-  /* Main: full width, no left margin, bottom padding for nav bar */
-  .main{margin-left:0!important;padding:14px 14px 80px!important}
+  .sidebar { display: none !important; }
   /* Single column everything */
-  .g2,.g3{grid-template-columns:1fr}
-  .fr,.fr3{grid-template-columns:1fr}
-  .bmr-grid{grid-template-columns:repeat(2,1fr)}
-  /* Hide desktop-only elements */
-  .desktop-only{display:none!important}
-  /* Show mobile-only elements */
-  .mobile-only{display:block!important}
+  .g2,.g3 { grid-template-columns: 1fr; }
+  .fr,.fr3 { grid-template-columns: 1fr; }
+  .bmr-grid { grid-template-columns: repeat(2,1fr); }
+  /* Hide/show desktop vs mobile elements */
+  .desktop-only { display: none !important; }
+  .mobile-only { display: block !important; }
   /* Stat cards smaller */
-  .sc-val{font-size:18px}
-  /* Period tabs scroll */
-  .period-row{overflow-x:auto}
+  .sc-val { font-size: 18px; }
   /* Cards tighter padding */
-  .card{padding:14px}
+  .card { padding: 14px; }
   /* Chart heights smaller */
-  .cw{height:150px}.cw-sm{height:130px}.cw-xs{height:110px}
+  .cw { height: 150px; } .cw-sm { height: 130px; } .cw-xs { height: 110px; }
   /* Page header smaller */
-  .ph h1{font-size:20px}
-  /* Pill wrap */
-  .pills{gap:5px}
-  .pill{font-size:11.5px;padding:4px 9px}
+  .ph h1 { font-size: 20px; }
+  /* Pills */
+  .pills { gap: 5px; }
+  .pill { font-size: 11.5px; padding: 4px 9px; }
   /* Stat grid compact */
-  .sg{grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px}
+  .sg { grid-template-columns: repeat(2,1fr); gap: 8px; margin-bottom: 12px; }
   /* Toolbar stack */
-  .toolbar{flex-direction:column;gap:8px}
+  .toolbar { flex-direction: column; gap: 8px; }
+  /* Period tabs scroll */
+  .period-row { overflow-x: auto; }
   /* stab-bar scroll */
-  .stab-bar{overflow-x:auto;white-space:nowrap;width:100%}
+  .stab-bar { overflow-x: auto; white-space: nowrap; width: 100%; }
 }
 
 /* ── BOTTOM NAV BAR ── */
 .bottom-nav{
   display:none;
-  position:fixed;bottom:0;left:0;right:0;
-  height:62px;
+  position:fixed;
+  bottom:0; left:0; right:0;
+  height:calc(62px + env(safe-area-inset-bottom, 0px));
+  padding-bottom:env(safe-area-inset-bottom, 0px);
   background:var(--bg2);
   border-top:1px solid var(--border2);
-  z-index:200;
+  z-index:500;
   align-items:stretch;
-  /* safe area for iPhone home bar */
-  padding-bottom:env(safe-area-inset-bottom);
+  /* Firefox mobile fix: force GPU composite layer so the nav
+     doesn't drift when the browser chrome (address bar) animates */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  will-change: transform;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 @media(max-width:767px){ .bottom-nav{display:flex!important} }
 .bn-item{
@@ -290,14 +313,16 @@ textarea{resize:vertical;min-height:60px}
 /* ── MOBILE QUICK-ADD FLOATING BUTTON ── */
 .fab{
   display:none;
-  position:fixed;bottom:72px;right:16px;
+  position:fixed;
+  bottom:calc(72px + env(safe-area-inset-bottom, 0px));
+  right:16px;
   width:52px;height:52px;border-radius:50%;
   background:var(--amber);color:#000;
   font-size:26px;font-weight:600;
   border:none;cursor:pointer;
   box-shadow:0 4px 16px rgba(245,166,35,.45);
   align-items:center;justify-content:center;
-  z-index:199;transition:transform .15s;
+  z-index:499;transition:transform .15s;
   -webkit-tap-highlight-color:transparent;
 }
 @media(max-width:767px){ .fab{display:flex!important} }
@@ -2252,7 +2277,7 @@ function renderImportHistory(){
 }
 
 // ════════════════════════════════════════════════════════════
-// BARCODE SCANNER — no external deps, works on file://
+// BARCODE SCANNER — BarcodeDetector (Chrome/Edge) + ZBar WASM (Firefox/Safari)
 // ════════════════════════════════════════════════════════════
 let scannerCtx = null;
 let scannerStream = null;
@@ -2260,10 +2285,110 @@ let torchOn = false;
 let scannerActive = false;
 let lastScannedFood = null;
 let nativeDetector = null;
+let zbarReady = false;
+let zbarModule = null;
 let liveRafId = null;
 
-// Check BarcodeDetector availability synchronously — init happens inside startLiveCamera
 const hasBarcodeDetector = typeof BarcodeDetector !== 'undefined';
+
+// Lazily load Quagga2 (pure-JS barcode decoder — works in Firefox/Safari
+// without BarcodeDetector API and without WASM).
+// Replaces the previous ZBar WASM approach which only shipped a Node CJS
+// build and could never create window.zbarWasm in a browser context.
+let quaggaLoading = false;
+async function loadZBar(){          // name kept for backward compat
+  if(zbarReady) return true;
+  if(zbarModule === false) return false;
+  if(quaggaLoading) return false;
+  quaggaLoading = true;
+  try {
+    await new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/@ericblade/quagga2@1.8.4/dist/quagga.min.js';
+      s.onload = resolve;
+      s.onerror = reject;
+      document.head.appendChild(s);
+    });
+    if(typeof Quagga !== 'undefined'){
+      zbarModule = Quagga; // store reference for legacy callers
+      zbarReady = true;
+      console.log('[VitaTrack] Quagga2 loaded (Firefox/Safari fallback)');
+      return true;
+    }
+  } catch(e){ console.warn('[VitaTrack] Quagga2 failed to load:', e.message); }
+  zbarModule = false;
+  return false;
+}
+
+// Decode barcode from canvas using Quagga2
+// (named zbarDetect to keep all existing call-sites working unchanged)
+async function zbarDetect(canvas){
+  if(!zbarReady || !zbarModule) return null;
+  return new Promise(resolve => {
+    try {
+      const dataURL = canvas.toDataURL('image/jpeg', 0.85);
+      zbarModule.decodeSingle({
+        decoder: {
+          readers: ['ean_reader','ean_8_reader','upc_reader','upc_e_reader',
+                    'code_128_reader','code_39_reader'],
+          debug: { drawBoundingBox:false, showFrequency:false,
+                   drawScanline:false,    showPattern:false }
+        },
+        locate: true,
+        src: dataURL
+      }, result => {
+        resolve(result && result.codeResult ? result.codeResult.code : null);
+      });
+    } catch(e){ resolve(null); }
+  });
+}
+
+// Get the best available detector
+async function getDetector(){
+  if(hasBarcodeDetector && !nativeDetector){
+    try {
+      const fmts = await BarcodeDetector.getSupportedFormats();
+      const wanted = ['ean_13','ean_8','upc_a','upc_e','code_128','code_39','qr_code'];
+      const use = wanted.filter(f => fmts.includes(f));
+      nativeDetector = new BarcodeDetector({ formats: use.length ? use : fmts });
+    } catch(e){ try { nativeDetector = new BarcodeDetector(); } catch(e2){} }
+  }
+  return nativeDetector;
+}
+
+// Detect barcode from any source (video, canvas, img) — tries all available methods
+async function detectBarcode(source){
+  // Try native first
+  const det = await getDetector();
+  if(det){
+    try {
+      const codes = await det.detect(source);
+      if(codes && codes.length > 0) return codes[0].rawValue;
+    } catch(e){}
+    // If source is video/img, also try via canvas
+    if(source.tagName !== 'CANVAS'){
+      try {
+        const cv = document.createElement('canvas');
+        cv.width = source.videoWidth || source.naturalWidth || source.width || 640;
+        cv.height = source.videoHeight || source.naturalHeight || source.height || 480;
+        cv.getContext('2d').drawImage(source, 0, 0);
+        const codes2 = await det.detect(cv);
+        if(codes2 && codes2.length > 0) return codes2[0].rawValue;
+      } catch(e){}
+    }
+  }
+  // Try ZBar WASM fallback
+  const zbLoaded = await loadZBar();
+  if(zbLoaded){
+    const cv = document.createElement('canvas');
+    cv.width = source.videoWidth || source.naturalWidth || (source.tagName==='CANVAS'?source.width:640);
+    cv.height = source.videoHeight || source.naturalHeight || (source.tagName==='CANVAS'?source.height:480);
+    cv.getContext('2d').drawImage(source, 0, 0);
+    const result = await zbarDetect(cv);
+    if(result) return result;
+  }
+  return null;
+}
 
 function openScanner(ctx){
   scannerCtx = ctx;
@@ -2307,17 +2432,9 @@ async function startLiveCamera(){
   document.getElementById('scan-photo').style.display = 'none';
   setStatus('Avvio fotocamera...', '');
 
-  // Init detector HERE (not at page load) — eliminates the race condition
-  if(hasBarcodeDetector && !nativeDetector){
-    try {
-      const fmts = await BarcodeDetector.getSupportedFormats();
-      const wanted = ['ean_13','ean_8','upc_a','upc_e','code_128','code_39','qr_code'];
-      const use = wanted.filter(f => fmts.includes(f));
-      nativeDetector = new BarcodeDetector({ formats: use.length ? use : fmts });
-    } catch(e){
-      try { nativeDetector = new BarcodeDetector(); } catch(e2){}
-    }
-  }
+  // Pre-init: start loading ZBar for Firefox in parallel
+  getDetector();
+  if(!hasBarcodeDetector) loadZBar();
 
   const constraints = [
     { video: { facingMode: { ideal:'environment' }, width:{ideal:1280}, height:{ideal:720} } },
@@ -2329,8 +2446,7 @@ async function startLiveCamera(){
     try { stream = await navigator.mediaDevices.getUserMedia(c); break; } catch(e){}
   }
   if(!stream){
-    // getUserMedia failed → drop to photo mode
-    showPhotoMode('Impossibile accedere alla fotocamera live.\nUsa il pulsante per scattare una foto del barcode o inserisci il codice manualmente.');
+    showPhotoMode('Impossibile accedere alla fotocamera.\nUsa il pulsante per scattare una foto del barcode o inserisci il codice manualmente.');
     return;
   }
   scannerStream = stream;
@@ -2344,17 +2460,25 @@ async function startLiveCamera(){
     if(caps.torch) document.getElementById('scanner-torch').style.display = 'inline-flex';
   } catch(e){}
 
-  setStatus('Inquadra il codice a barre del prodotto', '');
   scannerActive = true;
 
-  if(nativeDetector){
+  if(hasBarcodeDetector){
+    setStatus('Inquadra il codice a barre del prodotto', '');
     liveNativeScan(video);
   } else {
-    // Camera is live but no auto-decoder — keep video, show capture button
-    setStatus('Inquadra il barcode e premi il pulsante Cattura', '');
-    showCaptureButton();
+    // Firefox/Safari: ZBar WASM
+    setStatus('Caricamento scanner...', '');
+    const zbLoaded = await loadZBar();
+    if(zbLoaded){
+      setStatus('Inquadra il barcode e mantieni fermo per qualche istante', '');
+      liveZBarScan(video);
+    } else {
+      setStatus('Inquadra il barcode e premi Cattura', '');
+      showCaptureButton();
+    }
   }
 }
+
 
 function liveNativeScan(video){
   function tick(){
@@ -2391,6 +2515,32 @@ function liveNativeScan(video){
   liveRafId = requestAnimationFrame(tick);
 }
 
+// ZBar live scan loop — for Firefox/Safari
+function liveZBarScan(video){
+  const canvas = document.createElement('canvas');
+  const ctx2d = canvas.getContext('2d');
+  let lastScan = 0;
+  function tick(){
+    if(!scannerActive || !zbarReady) return;
+    const now = Date.now();
+    // Scan at ~8fps to keep CPU reasonable on mobile
+    if(now - lastScan > 125 && video.readyState >= 2 && video.videoWidth > 0){
+      lastScan = now;
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx2d.drawImage(video, 0, 0);
+      zbarDetect(canvas).then(result => {
+        if(!scannerActive) return;
+        if(result){ onBarcodeDetected(result); }
+        else { liveRafId = requestAnimationFrame(tick); }
+      }).catch(() => { liveRafId = requestAnimationFrame(tick); });
+    } else {
+      liveRafId = requestAnimationFrame(tick);
+    }
+  }
+  liveRafId = requestAnimationFrame(tick);
+}
+
 function showCaptureButton(){
   // Remove any existing capture btn
   const old = document.getElementById('live-capture-btn');
@@ -2409,17 +2559,12 @@ function showCaptureButton(){
 async function captureFrame(){
   const video = document.getElementById('scanner-video');
   if(!video || !scannerStream){ setStatus('⚠️ Fotocamera non attiva', 'var(--red)'); return; }
-  setStatus('Analisi in corso...', 'var(--amber)');
+  setStatus('Analisi frame...', 'var(--amber)');
+  const barcode = await detectBarcode(video);
+  if(barcode){ onBarcodeDetected(barcode); }
+  else { setStatus('⚠️ Nessun barcode rilevato. Avvicina il prodotto, assicurati che il barcode sia ben illuminato e centrato, poi riprova.', 'var(--amber)'); }
+}
 
-  // Init detector if still missing
-  if(hasBarcodeDetector && !nativeDetector){
-    try {
-      const fmts = await BarcodeDetector.getSupportedFormats();
-      const wanted = ['ean_13','ean_8','upc_a','upc_e','code_128','code_39','qr_code'];
-      const use = wanted.filter(f => fmts.includes(f));
-      nativeDetector = new BarcodeDetector({ formats: use.length ? use : fmts });
-    } catch(e){ try { nativeDetector = new BarcodeDetector(); } catch(e2){} }
-  }
 
   if(!nativeDetector){
     setStatus('⚠️ Rilevamento non supportato su questo browser. Usa il campo manuale.', 'var(--amber)');
@@ -2494,9 +2639,21 @@ async function handleImageFile(input){
         } catch(e){}
       }
     }
+    // Firefox/Safari fallback via Quagga2 (no BarcodeDetector available)
+    if(!barcode && !hasBarcodeDetector){
+      setStatus('Analisi con scanner alternativo...', 'var(--amber)');
+      const zbLoaded = await loadZBar();
+      if(zbLoaded){
+        const cv = document.getElementById('scanner-canvas');
+        cv.width = img.naturalWidth || img.width;
+        cv.height = img.naturalHeight || img.height;
+        cv.getContext('2d').drawImage(img, 0, 0);
+        barcode = await zbarDetect(cv);
+      }
+    }
     URL.revokeObjectURL(url);
     if(barcode){ onBarcodeDetected(barcode); }
-    else { setStatus(nativeDetector?'⚠️ Nessun barcode rilevato. Assicurati che l\'immagine sia nitida e il barcode ben visibile.':'⚠️ Browser non supportato. Inserisci il codice manualmente.','var(--amber)'); }
+    else { setStatus('⚠️ Nessun barcode rilevato. Assicurati che l\'immagine sia nitida e il barcode ben visibile e centrato.','var(--amber)'); }
     input.value='';
   };
   img.onerror = () => { setStatus('⚠️ Impossibile leggere l\'immagine.','var(--red)'); input.value=''; URL.revokeObjectURL(url); };
@@ -2806,9 +2963,16 @@ const hn=new Date().getHours(),mn=new Date().getMinutes();
 document.getElementById('ex-time').value=`${String(hn).padStart(2,'0')}:${String(mn).padStart(2,'0')}`;
 document.getElementById('sb-date').textContent=new Date().toLocaleDateString('it-IT',{day:'numeric',month:'long',year:'numeric'});
 document.getElementById('d-vtoggle').style.display='none';
-if(!S.profile.name||!S.profile.age){setTimeout(()=>nav('settings'),400);}
-// Mobile dashboard — called here because isMobile() (const) is defined later in the file
-// Use window.innerWidth directly to avoid the hoisting issue
+// Always start on dashboard; prompt profile setup non-intrusively
+if(!S.profile.name||!S.profile.age){
+  // Show a subtle notice on dashboard instead of redirecting
+  setTimeout(()=>{
+    if(!S.profile.name||!S.profile.age){
+      toast('👤 Completa il tuo Profilo in Impostazioni per attivare i calcoli automatici');
+    }
+  }, 1200);
+}
+// Mobile dashboard — setTimeout ensures all functions are defined
 setTimeout(()=>{ if(window.innerWidth<=767) renderMDash(); }, 0);
 
 // ════════════════════════════════════════════════════════════
