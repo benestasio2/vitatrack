@@ -288,13 +288,6 @@ textarea{resize:vertical;min-height:60px}
   border-top:1px solid var(--border2);
   z-index:500;
   align-items:stretch;
-  /* Firefox mobile fix: force GPU composite layer so the nav
-     doesn't drift when the browser chrome (address bar) animates */
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
-  will-change: transform;
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
 }
 @media(max-width:767px){ .bottom-nav{display:flex!important} }
 .bn-item{
@@ -2291,56 +2284,43 @@ let liveRafId = null;
 
 const hasBarcodeDetector = typeof BarcodeDetector !== 'undefined';
 
-// Lazily load Quagga2 (pure-JS barcode decoder — works in Firefox/Safari
-// without BarcodeDetector API and without WASM).
-// Replaces the previous ZBar WASM approach which only shipped a Node CJS
-// build and could never create window.zbarWasm in a browser context.
-let quaggaLoading = false;
-async function loadZBar(){          // name kept for backward compat
+// Lazily load ZBar WASM (for Firefox, Safari, browsers without BarcodeDetector)
+async function loadZBar(){
   if(zbarReady) return true;
-  if(zbarModule === false) return false;
-  if(quaggaLoading) return false;
-  quaggaLoading = true;
+  if(zbarModule === false) return false; // previously failed
   try {
     await new Promise((resolve, reject) => {
       const s = document.createElement('script');
-      s.src = 'https://cdn.jsdelivr.net/npm/@ericblade/quagga2@1.8.4/dist/quagga.min.js';
+      s.src = 'https://cdn.jsdelivr.net/npm/@undecaf/zbar-wasm@0.9.15/dist/index.js';
       s.onload = resolve;
       s.onerror = reject;
       document.head.appendChild(s);
     });
-    if(typeof Quagga !== 'undefined'){
-      zbarModule = Quagga; // store reference for legacy callers
+    // Wait for WASM to initialize
+    if(window.zbarWasm){
+      await window.zbarWasm.ready;
+      zbarModule = window.zbarWasm;
       zbarReady = true;
-      console.log('[VitaTrack] Quagga2 loaded (Firefox/Safari fallback)');
+      console.log('[VitaTrack] ZBar WASM loaded');
       return true;
     }
-  } catch(e){ console.warn('[VitaTrack] Quagga2 failed to load:', e.message); }
+  } catch(e){ console.warn('[VitaTrack] ZBar WASM failed to load:', e.message); }
   zbarModule = false;
   return false;
 }
 
-// Decode barcode from canvas using Quagga2
-// (named zbarDetect to keep all existing call-sites working unchanged)
+// Decode barcode from canvas using ZBar WASM
 async function zbarDetect(canvas){
   if(!zbarReady || !zbarModule) return null;
-  return new Promise(resolve => {
-    try {
-      const dataURL = canvas.toDataURL('image/jpeg', 0.85);
-      zbarModule.decodeSingle({
-        decoder: {
-          readers: ['ean_reader','ean_8_reader','upc_reader','upc_e_reader',
-                    'code_128_reader','code_39_reader'],
-          debug: { drawBoundingBox:false, showFrequency:false,
-                   drawScanline:false,    showPattern:false }
-        },
-        locate: true,
-        src: dataURL
-      }, result => {
-        resolve(result && result.codeResult ? result.codeResult.code : null);
-      });
-    } catch(e){ resolve(null); }
-  });
+  try {
+    const ctx = canvas.getContext('2d');
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const results = await zbarModule.scanImageData(imageData);
+    if(results && results.length > 0){
+      return results[0].decode(); // returns the barcode string
+    }
+  } catch(e){}
+  return null;
 }
 
 // Get the best available detector
@@ -2564,40 +2544,6 @@ async function captureFrame(){
   if(barcode){ onBarcodeDetected(barcode); }
   else { setStatus('⚠️ Nessun barcode rilevato. Avvicina il prodotto, assicurati che il barcode sia ben illuminato e centrato, poi riprova.', 'var(--amber)'); }
 }
-
-
-  if(!nativeDetector){
-    setStatus('⚠️ Rilevamento non supportato su questo browser. Usa il campo manuale.', 'var(--amber)');
-    return;
-  }
-
-  let barcode = null;
-
-  // Try detect(video) directly first
-  try {
-    const codes = await nativeDetector.detect(video);
-    if(codes && codes.length > 0) barcode = codes[0].rawValue;
-  } catch(e){}
-
-  // Fallback to canvas if video detection not supported
-  if(!barcode){
-    try {
-      const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth || 640;
-      canvas.height = video.videoHeight || 480;
-      canvas.getContext('2d').drawImage(video, 0, 0);
-      const codes = await nativeDetector.detect(canvas);
-      if(codes && codes.length > 0) barcode = codes[0].rawValue;
-    } catch(e){}
-  }
-
-  if(barcode){
-    onBarcodeDetected(barcode);
-  } else {
-    setStatus('⚠️ Nessun barcode. Avvicina il prodotto, assicurati che il barcode sia ben illuminato e centrato, poi riprova.', 'var(--amber)');
-  }
-}
-
 function stopLiveCamera(){
   scannerActive = false;
   if(liveRafId){ cancelAnimationFrame(liveRafId); liveRafId = null; }
@@ -2615,51 +2561,20 @@ async function handleImageFile(input){
 
   const img = new Image();
   const url = URL.createObjectURL(file);
-
   img.onload = async () => {
-    if(hasBarcodeDetector && !nativeDetector){
-      try {
-        const fmts = await BarcodeDetector.getSupportedFormats();
-        const wanted = ['ean_13','ean_8','upc_a','upc_e','code_128','code_39','qr_code'];
-        const use = wanted.filter(f => fmts.includes(f));
-        nativeDetector = new BarcodeDetector({ formats: use.length ? use : fmts });
-      } catch(e){ try { nativeDetector = new BarcodeDetector(); } catch(e2){} }
-    }
-    let barcode = null;
-    if(nativeDetector){
-      // Try detect on img element directly
-      try { const c=await nativeDetector.detect(img); if(c&&c.length) barcode=c[0].rawValue; } catch(e){}
-      // Fallback: canvas
-      if(!barcode){
-        try {
-          const cv=document.getElementById('scanner-canvas');
-          cv.width=img.naturalWidth; cv.height=img.naturalHeight;
-          cv.getContext('2d').drawImage(img,0,0);
-          const c=await nativeDetector.detect(cv); if(c&&c.length) barcode=c[0].rawValue;
-        } catch(e){}
-      }
-    }
-    // Firefox/Safari fallback via Quagga2 (no BarcodeDetector available)
-    if(!barcode && !hasBarcodeDetector){
-      setStatus('Analisi con scanner alternativo...', 'var(--amber)');
-      const zbLoaded = await loadZBar();
-      if(zbLoaded){
-        const cv = document.getElementById('scanner-canvas');
-        cv.width = img.naturalWidth || img.width;
-        cv.height = img.naturalHeight || img.height;
-        cv.getContext('2d').drawImage(img, 0, 0);
-        barcode = await zbarDetect(cv);
-      }
-    }
     URL.revokeObjectURL(url);
+    const barcode = await detectBarcode(img);
     if(barcode){ onBarcodeDetected(barcode); }
-    else { setStatus('⚠️ Nessun barcode rilevato. Assicurati che l\'immagine sia nitida e il barcode ben visibile e centrato.','var(--amber)'); }
-    input.value='';
+    else { setStatus('⚠️ Nessun barcode rilevato. Assicurati che l\'immagine sia nitida, ben illuminata e il barcode occupi buona parte della foto.', 'var(--amber)'); }
+    input.value = '';
   };
-  img.onerror = () => { setStatus('⚠️ Impossibile leggere l\'immagine.','var(--red)'); input.value=''; URL.revokeObjectURL(url); };
+  img.onerror = () => {
+    setStatus('⚠️ Impossibile leggere l\'immagine.', 'var(--red)');
+    input.value = '';
+    URL.revokeObjectURL(url);
+  };
   img.src = url;
 }
-
 function lookupManual(){
   const code = document.getElementById('scan-manual-input').value.trim();
   if(!code || code.length < 4){
