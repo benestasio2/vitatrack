@@ -228,19 +228,15 @@ textarea{resize:vertical;min-height:60px}
    MOBILE LAYOUT  <768px
 ══════════════════════════════════════════════════════════ */
 @media(max-width:767px){
-  html {
-    overscroll-behavior-y: none;
-  }
-
+  /* Override desktop flex/height model — let body scroll naturally */
+  html { height: auto !important; }
   body {
     height: auto !important;
     min-height: 100vh;
     display: block !important;
     overflow-y: auto !important;
     overflow-x: hidden;
-    overscroll-behavior-y: none;
   }
-}
   /* Main: full width, no left margin, natural height, bottom padding for fixed nav */
   .main {
     margin-left: 0 !important;
@@ -306,6 +302,24 @@ textarea{resize:vertical;min-height:60px}
 .bn-item .bn-icon{font-size:20px;line-height:1}
 .bn-item.active{color:var(--amber)}
 .bn-item:active{opacity:.7}
+
+/* ── MOBILE QUICK-ADD FLOATING BUTTON ── */
+.fab{
+  display:none;
+  position:fixed;
+  bottom:calc(72px + env(safe-area-inset-bottom, 0px));
+  right:16px;
+  width:52px;height:52px;border-radius:50%;
+  background:var(--amber);color:#000;
+  font-size:26px;font-weight:600;
+  border:none;cursor:pointer;
+  box-shadow:0 4px 16px rgba(245,166,35,.45);
+  align-items:center;justify-content:center;
+  z-index:499;transition:transform .15s;
+  -webkit-tap-highlight-color:transparent;
+}
+@media(max-width:767px){ .fab{display:flex!important} }
+.fab:active{transform:scale(.93)}
 
 /* ── MOBILE DASHBOARD RING ── */
 .m-ring-row{display:flex;align-items:center;gap:14px;margin-bottom:14px}
@@ -397,6 +411,19 @@ textarea{resize:vertical;min-height:60px}
   <button class="bn-item" id="bn-sleepneat" onclick="nav('sleepneat')"><span class="bn-icon">😴</span>Sonno</button>
   <button class="bn-item" id="bn-settings" onclick="nav('settings')"><span class="bn-icon">⚙️</span>Impost.</button>
 </nav>
+
+<!-- ═══ FAB — quick add (mobile only) ═══ -->
+<button class="fab" id="fab" onclick="openFab()" title="Aggiungi">+</button>
+
+<!-- ═══ FAB MENU (mobile only) ═══ -->
+<div id="fab-menu" style="display:none;position:fixed;bottom:130px;right:12px;z-index:250;flex-direction:column;gap:8px;align-items:flex-end">
+  <button onclick="fabAction('food')" style="background:var(--amber);color:#000;border:none;border-radius:20px;padding:10px 16px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;box-shadow:0 3px 12px rgba(0,0,0,.3)">🍽 Aggiungi pasto</button>
+  <button onclick="fabAction('water')" style="background:var(--blue-dim);color:var(--blue);border:1px solid rgba(74,158,255,.3);border-radius:20px;padding:10px 16px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;box-shadow:0 3px 12px rgba(0,0,0,.3)">💧 Acqua</button>
+  <button onclick="fabAction('exercise')" style="background:var(--blue-dim);color:var(--blue);border:1px solid rgba(74,158,255,.3);border-radius:20px;padding:10px 16px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;box-shadow:0 3px 12px rgba(0,0,0,.3)">💪 Allenamento</button>
+  <button onclick="fabAction('steps')" style="background:var(--green-dim);color:var(--green);border:1px solid rgba(34,199,144,.3);border-radius:20px;padding:10px 16px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;box-shadow:0 3px 12px rgba(0,0,0,.3)">👟 Passi</button>
+  <button onclick="fabAction('sleep')" style="background:var(--purple-dim);color:var(--purple);border:1px solid rgba(155,113,245,.3);border-radius:20px;padding:10px 16px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;box-shadow:0 3px 12px rgba(0,0,0,.3)">😴 Sonno</button>
+</div>
+<div id="fab-overlay" onclick="closeFab()" style="display:none;position:fixed;inset:0;z-index:240;background:rgba(0,0,0,.5)"></div>
 
 <!-- ═══ MOBILE QUICK-ADD MODALS ═══ -->
 
@@ -2889,6 +2916,25 @@ nav = function(s){
   if(fab) fab.style.display=isMobile()&&s==='dashboard'?'flex':'none';
   document.querySelector('.main').scrollTo(0,0);
 };
+
+// ── FAB ────────────────────────────────────────────────
+let fabOpen = false;
+function openFab(){
+  fabOpen = !fabOpen;
+  document.getElementById('fab-menu').style.display = fabOpen ? 'flex' : 'none';
+  document.getElementById('fab-overlay').style.display = fabOpen ? 'block' : 'none';
+  document.getElementById('fab').textContent = fabOpen ? '×' : '+';
+}
+function closeFab(){
+  fabOpen = false;
+  document.getElementById('fab-menu').style.display = 'none';
+  document.getElementById('fab-overlay').style.display = 'none';
+  document.getElementById('fab').textContent = '+';
+}
+function fabAction(type){
+  closeFab();
+  openMModal(type);
+}
 
 // ── Mobile Modals ────────────────────────────────────
 function openMModal(type){
