@@ -3362,7 +3362,7 @@ function renderMDash(){
         destroyChart('mwc');
         const startW=p.weight||wEntries[0].weight;
         const endW=p.targetWeight||wEntries[wEntries.length-1].weight;
-        const firstDate=wEntries[0].isStart?new Date(now);const lastDate=new Date(wEntries[wEntries.length-1].date?wEntries[wEntries.length-1].date+'T12:00:00':now);
+        const firstDate=wEntries[0].isStart?new Date(now):new Date(wEntries[0].date+'T12:00:00');const lastDate=new Date(wEntries[wEntries.length-1].date?wEntries[wEntries.length-1].date+'T12:00:00':now);
         const daysPassed=Math.max(1,(lastDate-firstDate)/(1000*60*60*24));
         const weightChange=endW-startW;
         const velocita=weightChange/daysPassed;const remaining=endW-curW;const daysToGoal=Math.max(1,Math.abs(remaining/velocita));
