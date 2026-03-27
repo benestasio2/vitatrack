@@ -1427,10 +1427,15 @@ function renderDash(){
     const sorted=[...S.weightLog].sort((a,b)=>a.date.localeCompare(b.date));
     const wLabels=sorted.map(e=>fmtDateShort(e.date));
     const wVals=sorted.map(e=>e.weight);
+    // Trend ideale: dal peso iniziale (p.weight) al peso obiettivo (p.targetWeight)
+    const startW=p.weight||wVals[0];
+    const endW=p.targetWeight||wVals[wVals.length-1];
+    const trendLine=Array.from({length:wVals.length},(v,i)=>startW+(endW-startW)*(i/(wVals.length-1||1)));
     charts['wc']=new Chart(document.getElementById('weight-c').getContext('2d'),{
       type:'line',data:{labels:wLabels,datasets:[
-        {data:wVals,borderColor:'var(--amber)',borderWidth:2,pointBackgroundColor:'var(--amber)',pointRadius:4,fill:false,tension:.3},
-        {data:Array(wVals.length).fill(p.targetWeight||wVals[wVals.length-1]),type:'line',borderColor:'rgba(240,64,64,0.6)',borderDash:[5,4],borderWidth:2,pointRadius:0,fill:false,label:'Trend'}
+        {data:wVals,borderColor:'var(--amber)',borderWidth:2.5,pointBackgroundColor:'var(--amber)',pointRadius:4,fill:false,tension:.3,label:'Peso Reale'},
+        {data:Array(wVals.length).fill(endW),type:'line',borderColor:'var(--amber)',borderDash:[5,4],borderWidth:2,pointRadius:0,fill:false,label:'Target'},
+        {data:trendLine,type:'line',borderColor:'var(--green)',borderDash:[3,3],borderWidth:2,pointRadius:0,fill:false,label:'Trend Ideale'}
       ]},options:{...CO}
     });
   } else {
@@ -3337,7 +3342,24 @@ function renderMDash(){
     // Weight chart
     if(hasWeight){
       const wc=document.getElementById('m-weight-c');
-      if(wc){ destroyChart('mwc'); charts['mwc']=new Chart(wc.getContext('2d'),{type:'line',data:{labels:wEntries.map(e=>e.isStart?'Start':fmtDateShort(e.date)),datasets:[{data:wEntries.map(e=>e.weight),borderColor:'var(--amber)',borderWidth:2.5,pointBackgroundColor:'var(--amber)',pointRadius:3,fill:false,tension:.3,label:'Peso'},{data:Array(wEntries.length).fill(p.targetWeight||wEntries[wEntries.length-1].weight),borderColor:'rgba(240,64,64,.7)',borderDash:[4,3],borderWidth:2,pointRadius:0,fill:false,label:'Trend'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#506070',font:{size:9},maxTicksLimit:6}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#506070',font:{size:9}},beginAtZero:false}}}}); }
+      if(wc){ 
+        destroyChart('mwc');
+        const startW=p.weight||wEntries[0].weight;
+        const endW=p.targetWeight||wEntries[wEntries.length-1].weight;
+        const trendLine=Array.from({length:wEntries.length},(v,i)=>startW+(endW-startW)*(i/(wEntries.length-1||1)));
+        charts['mwc']=new Chart(wc.getContext('2d'),{
+          type:'line',
+          data:{
+            labels:wEntries.map(e=>e.isStart?'Start':fmtDateShort(e.date)),
+            datasets:[
+              {data:wEntries.map(e=>e.weight),borderColor:'var(--amber)',borderWidth:2.5,pointBackgroundColor:'var(--amber)',pointRadius:3,fill:false,tension:.3,label:'Peso Reale'},
+              {data:Array(wEntries.length).fill(endW),borderColor:'var(--amber)',borderDash:[5,4],borderWidth:2,pointRadius:0,fill:false,label:'Target'},
+              {data:trendLine,borderColor:'var(--green)',borderDash:[3,3],borderWidth:2,pointRadius:0,fill:false,label:'Trend Ideale'}
+            ]
+          },
+          options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#506070',font:{size:9},maxTicksLimit:6}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#506070',font:{size:9}},beginAtZero:false}}}
+        }); 
+      }
     }
   });
 }
