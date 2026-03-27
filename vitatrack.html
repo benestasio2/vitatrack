@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>VitaTrack</title>
 
 <!-- PWA -->
@@ -228,13 +228,12 @@ textarea{resize:vertical;min-height:60px}
    MOBILE LAYOUT  <768px
 ══════════════════════════════════════════════════════════ */
 @media(max-width:767px){
-  /* Override desktop flex/height model — let body scroll naturally */
-  html { height: auto !important; }
+  /* Override desktop flex/height model — lock viewport */
+  html { height: 100vh !important; overflow: hidden !important; }
   body {
-    height: auto !important;
-    min-height: 100vh;
+    height: 100vh !important;
     display: block !important;
-    overflow-x: hidden;
+    overflow: hidden !important;
   }
   /* Main: full width, no left margin, natural height, bottom padding for fixed nav */
   .main {
@@ -242,8 +241,7 @@ textarea{resize:vertical;min-height:60px}
     padding: 14px 14px 80px !important;
     overflow-y: auto !important;
     overflow-x: hidden;
-    min-height: calc(100vh - 62px);
-    height: auto !important;
+    height: 100vh !important;
     flex: none !important;
   }
   /* Hide desktop sidebar entirely */
@@ -281,8 +279,7 @@ textarea{resize:vertical;min-height:60px}
   display:none;
   position:fixed;
   bottom:0; left:0; right:0;
-  height:calc(62px + env(safe-area-inset-bottom, 0px));
-  padding-bottom:env(safe-area-inset-bottom, 0px);
+  height:62px;
   background:var(--bg2);
   border-top:1px solid var(--border2);
   z-index:500;
@@ -306,7 +303,7 @@ textarea{resize:vertical;min-height:60px}
 .fab{
   display:none;
   position:fixed;
-  bottom:calc(72px + env(safe-area-inset-bottom, 0px));
+  bottom:72px;
   right:16px;
   width:52px;height:52px;border-radius:50%;
   background:var(--amber);color:#000;
