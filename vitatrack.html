@@ -501,7 +501,7 @@ textarea{resize:vertical;min-height:60px}
 <div class="m-modal" id="m-modal-sleep">
   <div class="m-modal-hd"><h2>😴 Sonno</h2><button class="m-modal-close" onclick="closeMModal('sleep')">×</button></div>
   <div class="m-modal-body">
-    <div class="fr">
+    <div class="fr" style="grid-template-columns: 1fr 1fr;">
       <div class="fg"><label>Addormentamento</label><input id="msl-start" type="time" value="23:00" oninput="calcMSl()"></div>
       <div class="fg"><label>Sveglia</label><input id="msl-end" type="time" value="07:00" oninput="calcMSl()"></div>
     </div>
@@ -1430,7 +1430,7 @@ function renderDash(){
     charts['wc']=new Chart(document.getElementById('weight-c').getContext('2d'),{
       type:'line',data:{labels:wLabels,datasets:[
         {data:wVals,borderColor:'var(--amber)',borderWidth:2,pointBackgroundColor:'var(--amber)',pointRadius:4,fill:false,tension:.3},
-        {data:Array(wVals.length).fill(p.targetWeight||wVals[wVals.length-1]),type:'line',borderColor:'rgba(34,199,144,0.5)',borderDash:[5,4],borderWidth:1.5,pointRadius:0,fill:false}
+        {data:Array(wVals.length).fill(p.targetWeight||wVals[wVals.length-1]),type:'line',borderColor:'rgba(240,64,64,0.6)',borderDash:[5,4],borderWidth:2,pointRadius:0,fill:false,label:'Trend'}
       ]},options:{...CO}
     });
   } else {
@@ -3304,8 +3304,8 @@ function renderMDash(){
     <!-- Quick actions — only 3 -->
     <div style="font-size:11px;color:var(--text3);margin-bottom:6px;letter-spacing:.5px;font-family:'DM Sans',sans-serif">ACCESSO RAPIDO</div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
-      <button onclick="fabAction('food')" style="background:var(--amber-dim);border:1px solid var(--amber-border);border-radius:10px;padding:14px 8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;color:var(--amber);display:flex;flex-direction:column;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent"><span style="font-size:22px">🍽</span>Aggiungi Pasto</button>
-      <button onclick="fabAction('water')" style="background:var(--blue-dim);border:1px solid rgba(74,158,255,.25);border-radius:10px;padding:14px 8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;color:var(--blue);display:flex;flex-direction:column;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent"><span style="font-size:22px">💧</span>Acqua</button>
+      <button onclick="openMModal('food')" style="background:var(--amber-dim);border:1px solid var(--amber-border);border-radius:10px;padding:14px 8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;color:var(--amber);display:flex;flex-direction:column;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent"><span style="font-size:22px">🍽</span>Aggiungi Pasto</button>
+      <button onclick="openMModal('water')" style="background:var(--blue-dim);border:1px solid rgba(74,158,255,.25);border-radius:10px;padding:14px 8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;color:var(--blue);display:flex;flex-direction:column;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent"><span style="font-size:22px">💧</span>Acqua</button>
       <button onclick="openMModal('weight')" style="background:var(--green-dim);border:1px solid rgba(34,199,144,.25);border-radius:10px;padding:14px 8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;color:var(--green);display:flex;flex-direction:column;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent"><span style="font-size:22px">⚖️</span>Peso</button>
     </div>
 
@@ -3337,7 +3337,7 @@ function renderMDash(){
     // Weight chart
     if(hasWeight){
       const wc=document.getElementById('m-weight-c');
-      if(wc){ destroyChart('mwc'); charts['mwc']=new Chart(wc.getContext('2d'),{type:'line',data:{labels:wEntries.map(e=>e.isStart?'Start':fmtDateShort(e.date)),datasets:[{data:wEntries.map(e=>e.weight),borderColor:'var(--amber)',borderWidth:2,pointBackgroundColor:'var(--amber)',pointRadius:3,fill:false,tension:.3},{data:Array(wEntries.length).fill(p.targetWeight||wEntries[wEntries.length-1].weight),borderColor:'rgba(34,199,144,.5)',borderDash:[4,3],borderWidth:1.5,pointRadius:0,fill:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#506070',font:{size:9},maxTicksLimit:6}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#506070',font:{size:9}},beginAtZero:false}}}}); }
+      if(wc){ destroyChart('mwc'); charts['mwc']=new Chart(wc.getContext('2d'),{type:'line',data:{labels:wEntries.map(e=>e.isStart?'Start':fmtDateShort(e.date)),datasets:[{data:wEntries.map(e=>e.weight),borderColor:'var(--amber)',borderWidth:2.5,pointBackgroundColor:'var(--amber)',pointRadius:3,fill:false,tension:.3,label:'Peso'},{data:Array(wEntries.length).fill(p.targetWeight||wEntries[wEntries.length-1].weight),borderColor:'rgba(240,64,64,.7)',borderDash:[4,3],borderWidth:2,pointRadius:0,fill:false,label:'Trend'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#506070',font:{size:9},maxTicksLimit:6}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#506070',font:{size:9}},beginAtZero:false}}}}); }
     }
   });
 }
