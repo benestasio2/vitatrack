@@ -501,7 +501,7 @@ textarea{resize:vertical;min-height:60px}
 <div class="m-modal" id="m-modal-sleep">
   <div class="m-modal-hd"><h2>😴 Sonno</h2><button class="m-modal-close" onclick="closeMModal('sleep')">×</button></div>
   <div class="m-modal-body">
-    <div class="fr">
+    <div class="fr" style="grid-template-columns: 1fr 1fr !important;">
       <div class="fg"><label>Addormentamento</label><input id="msl-start" type="time" value="23:00" oninput="calcMSl()"></div>
       <div class="fg"><label>Sveglia</label><input id="msl-end" type="time" value="07:00" oninput="calcMSl()"></div>
     </div>
@@ -1430,11 +1430,19 @@ function renderDash(){
     // Trend ideale: dal peso iniziale (p.weight) al peso obiettivo (p.targetWeight)
     const startW=p.weight||wVals[0];
     const endW=p.targetWeight||wVals[wVals.length-1];
-    const trendLine=Array.from({length:wVals.length},(v,i)=>startW+(endW-startW)*(i/(wVals.length-1||1)));
+    const firstDate=new Date(sorted[0].date+'T12:00:00');
+    const lastDate=new Date(sorted[sorted.length-1].date+'T12:00:00');
+    const daysPassed=Math.max(1,(lastDate-firstDate)/(1000*60*60*24));
+    const weightChange=endW-startW;
+    const velocita=weightChange/daysPassed;const remaining=endW-currentWeight(p);const daysToGoal=Math.max(1,Math.abs(remaining/velocita));
+    const trendExtendDate=new Date(lastDate);trendExtendDate.setDate(trendExtendDate.getDate()+daysToGoal);
+    let trendLabels=[...wLabels];let trendDates=[...sorted.map(e=>new Date(e.date+'T12:00:00'))];
+    const cur=new Date(lastDate);while(cur<trendExtendDate){cur.setDate(cur.getDate()+1);trendLabels.push(fmtDateShort(cur.toISOString().split('T')[0]));trendDates.push(new Date(cur));}
+    const trendLine=Array.from({length:trendDates.length},(v,i)=>startW+(endW-startW)*(i/(trendDates.length-1||1)));
     charts['wc']=new Chart(document.getElementById('weight-c').getContext('2d'),{
-      type:'line',data:{labels:wLabels,datasets:[
+      type:'line',data:{labels:trendLabels,datasets:[
         {data:wVals,borderColor:'#f5a623',borderWidth:2.5,pointBackgroundColor:'#f5a623',pointRadius:4,fill:false,tension:.3,label:'Peso Reale'},
-        {data:Array(wVals.length).fill(endW),type:'line',borderColor:'#f5a623',borderDash:[5,4],borderWidth:2,pointRadius:0,fill:false,label:'Target'},
+        {data:[...wVals,...Array(trendLabels.length-wVals.length).fill(endW)],type:'line',borderColor:'#f5a623',borderDash:[5,4],borderWidth:2,pointRadius:0,fill:false,label:'Target'},
         {data:trendLine,type:'line',borderColor:'#22c790',borderDash:[3,3],borderWidth:2,pointRadius:0,fill:false,label:'Trend Ideale'}
       ]},options:{...CO}
     });
@@ -2774,7 +2782,7 @@ function importData(input){
       const mode = document.getElementById('import-mode').value;
       if(mode === 'replace'){
         // Full replace — carica tutto incluso profilo
-        S.profile = data.profile || { ...S.profile };
+        if(data.profile) S.profile = { ...S.profile, ...data.profile };  // Merge per mantenere defaults, sovrascrivi con import
         S.foodDb = data.foodDb || [];
         S.recipes = data.recipes || [];
         S.weightLog = data.weightLog || [];
@@ -3354,14 +3362,21 @@ function renderMDash(){
         destroyChart('mwc');
         const startW=p.weight||wEntries[0].weight;
         const endW=p.targetWeight||wEntries[wEntries.length-1].weight;
-        const trendLine=Array.from({length:wEntries.length},(v,i)=>startW+(endW-startW)*(i/(wEntries.length-1||1)));
+        const firstDate=wEntries[0].isStart?new Date(now);const lastDate=new Date(wEntries[wEntries.length-1].date?wEntries[wEntries.length-1].date+'T12:00:00':now);
+        const daysPassed=Math.max(1,(lastDate-firstDate)/(1000*60*60*24));
+        const weightChange=endW-startW;
+        const velocita=weightChange/daysPassed;const remaining=endW-curW;const daysToGoal=Math.max(1,Math.abs(remaining/velocita));
+        const trendExtendDate=new Date(lastDate);trendExtendDate.setDate(trendExtendDate.getDate()+daysToGoal);
+        let trendLabels=[...wEntries.map(e=>e.isStart?'Start':fmtDateShort(e.date))];let trendDates=[...wEntries.map((e,i)=>i===0?firstDate:new Date(e.date+'T12:00:00'))];
+        const cur=new Date(lastDate);while(cur<trendExtendDate){cur.setDate(cur.getDate()+1);trendLabels.push(fmtDateShort(cur.toISOString().split('T')[0]));trendDates.push(new Date(cur));}
+        const trendLine=Array.from({length:trendDates.length},(v,i)=>startW+(endW-startW)*(i/(trendDates.length-1||1)));
         charts['mwc']=new Chart(wc.getContext('2d'),{
           type:'line',
           data:{
-            labels:wEntries.map(e=>e.isStart?'Start':fmtDateShort(e.date)),
+            labels:trendLabels,
             datasets:[
-              {data:wEntries.map(e=>e.weight),borderColor:'#f5a623',borderWidth:2.5,pointBackgroundColor:'#f5a623',pointRadius:3,fill:false,tension:.3,label:'Peso Reale'},
-              {data:Array(wEntries.length).fill(endW),borderColor:'#f5a623',borderDash:[5,4],borderWidth:2,pointRadius:0,fill:false,label:'Target'},
+              {data:[...wEntries.map(e=>e.weight),...Array(trendLabels.length-wEntries.length).fill(endW)],borderColor:'#f5a623',borderWidth:2.5,pointBackgroundColor:'#f5a623',pointRadius:3,fill:false,tension:.3,label:'Peso Reale'},
+              {data:Array(trendLabels.length).fill(endW),borderColor:'#f5a623',borderDash:[5,4],borderWidth:2,pointRadius:0,fill:false,label:'Target'},
               {data:trendLine,borderColor:'#22c790',borderDash:[3,3],borderWidth:2,pointRadius:0,fill:false,label:'Trend Ideale'}
             ]
           },
