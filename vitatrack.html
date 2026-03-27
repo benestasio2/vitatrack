@@ -501,7 +501,7 @@ textarea{resize:vertical;min-height:60px}
 <div class="m-modal" id="m-modal-sleep">
   <div class="m-modal-hd"><h2>😴 Sonno</h2><button class="m-modal-close" onclick="closeMModal('sleep')">×</button></div>
   <div class="m-modal-body">
-    <div class="fr" style="grid-template-columns: 1fr 1fr;">
+    <div class="fr">
       <div class="fg"><label>Addormentamento</label><input id="msl-start" type="time" value="23:00" oninput="calcMSl()"></div>
       <div class="fg"><label>Sveglia</label><input id="msl-end" type="time" value="07:00" oninput="calcMSl()"></div>
     </div>
@@ -1433,9 +1433,9 @@ function renderDash(){
     const trendLine=Array.from({length:wVals.length},(v,i)=>startW+(endW-startW)*(i/(wVals.length-1||1)));
     charts['wc']=new Chart(document.getElementById('weight-c').getContext('2d'),{
       type:'line',data:{labels:wLabels,datasets:[
-        {data:wVals,borderColor:'var(--amber)',borderWidth:2.5,pointBackgroundColor:'var(--amber)',pointRadius:4,fill:false,tension:.3,label:'Peso Reale'},
-        {data:Array(wVals.length).fill(endW),type:'line',borderColor:'var(--amber)',borderDash:[5,4],borderWidth:2,pointRadius:0,fill:false,label:'Target'},
-        {data:trendLine,type:'line',borderColor:'var(--green)',borderDash:[3,3],borderWidth:2,pointRadius:0,fill:false,label:'Trend Ideale'}
+        {data:wVals,borderColor:'#f5a623',borderWidth:2.5,pointBackgroundColor:'#f5a623',pointRadius:4,fill:false,tension:.3,label:'Peso Reale'},
+        {data:Array(wVals.length).fill(endW),type:'line',borderColor:'#f5a623',borderDash:[5,4],borderWidth:2,pointRadius:0,fill:false,label:'Target'},
+        {data:trendLine,type:'line',borderColor:'#22c790',borderDash:[3,3],borderWidth:2,pointRadius:0,fill:false,label:'Trend Ideale'}
       ]},options:{...CO}
     });
   } else {
@@ -2773,15 +2773,15 @@ function importData(input){
       }
       const mode = document.getElementById('import-mode').value;
       if(mode === 'replace'){
-        // Full replace
-        S.profile = { ...S.profile, ...(data.profile||{}) };
+        // Full replace — carica tutto incluso profilo
+        S.profile = data.profile || { ...S.profile };
         S.foodDb = data.foodDb || [];
         S.recipes = data.recipes || [];
         S.weightLog = data.weightLog || [];
         S.logs = data.logs || {};
         save();
         const days = Object.keys(S.logs).length;
-        showImportStatus(`✅ Importazione completata — ${days} giorni, ${S.foodDb.length} cibi, ${S.recipes.length} ricette caricati.`, 'var(--green)');
+        showImportStatus(`✅ Importazione completata — profilo: ${S.profile.name||'–'}, ${days} giorni, ${S.foodDb.length} cibi, ${S.recipes.length} ricette caricati.`, 'var(--green)');
       } else {
         // Merge
         let newDays=0, skippedDays=0, newFoods=0, newRecipes=0;
@@ -3318,11 +3318,19 @@ function renderMDash(){
     ${l.nutrition.meals.length>0?`
     <div class="card" style="margin-bottom:12px">
       <div class="card-title">Pasti di oggi</div>
-      ${l.nutrition.meals.slice(-5).map(m=>`
-        <div class="li" style="padding:8px 0">
-          <div class="li-info"><h4 style="font-size:13px">${m.name}</h4><p style="font-size:11px">${SLOTS.find(s=>s.k===m.slot)?.label||''}</p></div>
-          <div class="li-meta"><span class="kcal" style="font-size:12px">${m.kcal} kcal</span></div>
-        </div>`).join('')}
+      ${SLOTS.map(slot=>{
+        const slotMeals=l.nutrition.meals.filter(m=>m.slot===slot.k);
+        if(!slotMeals.length) return '';
+        const totKcal=slotMeals.reduce((s,m)=>s+(m.kcal||0),0);
+        const totPro=round2(slotMeals.reduce((s,m)=>s+(m.pro||0),0));
+        const totCarb=round2(slotMeals.reduce((s,m)=>s+(m.carb||0),0));
+        const totFat=round2(slotMeals.reduce((s,m)=>s+(m.fat||0),0));
+        return `<div style="margin-bottom:10px;border-left:3px solid var(--amber);padding-left:10px">
+          <div style="font-size:12px;font-weight:600;margin-bottom:4px">${slot.label}</div>
+          ${slotMeals.map(m=>`<div style="font-size:11px;color:var(--text3);margin-bottom:2px">${m.name} <span style="color:var(--text4)">${m.kcal}kcal</span></div>`).join('')}
+          <div style="font-size:10px;color:var(--text4);margin-top:6px"><b>Totale:</b> ${totKcal}kcal · <span style="color:var(--purple)">P:${totPro}g</span> <span style="color:var(--amber)">C:${totCarb}g</span> <span style="color:var(--green)">G:${totFat}g</span></div>
+        </div>`;
+      }).join('')}
     </div>`:''}
 
     <!-- Steps bar if present -->
@@ -3352,9 +3360,9 @@ function renderMDash(){
           data:{
             labels:wEntries.map(e=>e.isStart?'Start':fmtDateShort(e.date)),
             datasets:[
-              {data:wEntries.map(e=>e.weight),borderColor:'var(--amber)',borderWidth:2.5,pointBackgroundColor:'var(--amber)',pointRadius:3,fill:false,tension:.3,label:'Peso Reale'},
-              {data:Array(wEntries.length).fill(endW),borderColor:'var(--amber)',borderDash:[5,4],borderWidth:2,pointRadius:0,fill:false,label:'Target'},
-              {data:trendLine,borderColor:'var(--green)',borderDash:[3,3],borderWidth:2,pointRadius:0,fill:false,label:'Trend Ideale'}
+              {data:wEntries.map(e=>e.weight),borderColor:'#f5a623',borderWidth:2.5,pointBackgroundColor:'#f5a623',pointRadius:3,fill:false,tension:.3,label:'Peso Reale'},
+              {data:Array(wEntries.length).fill(endW),borderColor:'#f5a623',borderDash:[5,4],borderWidth:2,pointRadius:0,fill:false,label:'Target'},
+              {data:trendLine,borderColor:'#22c790',borderDash:[3,3],borderWidth:2,pointRadius:0,fill:false,label:'Trend Ideale'}
             ]
           },
           options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#506070',font:{size:9},maxTicksLimit:6}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#506070',font:{size:9}},beginAtZero:false}}}
