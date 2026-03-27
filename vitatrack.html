@@ -440,17 +440,23 @@ textarea{resize:vertical;min-height:60px}
     <div id="mf-qty-row" style="display:none" class="fg">
       <label>Quantità (g)</label>
       <input id="mf-qty-db" type="number" placeholder="100" min="0" step="1" oninput="calcMFoodFromDb()">
+      <div style="font-size:11px;color:var(--text3);margin-top:4px" id="mf-qty-hint"></div>
     </div>
     <div id="mf-manual-row">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:12px;padding:10px 12px;background:var(--bg4);border-radius:var(--rsm);line-height:1.5">💡 <strong>Opzione 1:</strong> Inserisci per 100g + quantità · <strong>Opzione 2:</strong> Inserisci per la tua porzione</div>
       <div class="fr">
-        <div class="fg"><label>Calorie (kcal)</label><input id="mf-kcal" type="number" placeholder="400" min="0"></div>
+        <div class="fg"><label>Quantita (g)</label><input id="mf-qty-manual" type="number" placeholder="100" min="0" step="1" oninput="calcMFPortionMode()"></div>
         <div class="fg"><label>Pasto</label><select id="mf-slot"><option value="breakfast">🌅 Colazione</option><option value="lunch">☀️ Pranzo</option><option value="snack">🍪 Spuntino</option><option value="dinner">🌙 Cena</option></select></div>
       </div>
       <div class="fr">
-        <div class="fg"><label>Proteine (g)</label><input id="mf-pro" type="number" placeholder="15" min="0" step="0.1"></div>
-        <div class="fg"><label>Carboidrati (g)</label><input id="mf-carb" type="number" placeholder="50" min="0" step="0.1"></div>
+        <div class="fg"><label>Calorie (kcal) - per 100g se quantita</label><input id="mf-kcal" type="number" placeholder="400" min="0" oninput="saveMFBase();calcMFPortionMode()"></div>
+        <div class="fg"></div>
       </div>
-      <div class="fg"><label>Grassi (g)</label><input id="mf-fat" type="number" placeholder="12" min="0" step="0.1"></div>
+      <div class="fr">
+        <div class="fg"><label>Proteine (g)</label><input id="mf-pro" type="number" placeholder="15" min="0" step="0.1" oninput="saveMFBase();calcMFPortionMode()"></div>
+        <div class="fg"><label>Carboidrati (g)</label><input id="mf-carb" type="number" placeholder="50" min="0" step="0.1" oninput="saveMFBase();calcMFPortionMode()"></div>
+      </div>
+      <div class="fg"><label>Grassi (g)</label><input id="mf-fat" type="number" placeholder="12" min="0" step="0.1" oninput="saveMFBase();calcMFPortionMode()"></div>\n      <input id="mf-kcal-base" type="hidden">\n      <input id="mf-pro-base" type="hidden">\n      <input id="mf-carb-base" type="hidden">\n      <input id="mf-fat-base" type="hidden">
     </div>
     <div id="mf-slot-row" style="display:none" class="fg">
       <label>Pasto</label>
@@ -2938,7 +2944,13 @@ function openMModal(type){
   if(type==='water') renderMWater();
   if(type==='steps'){ const l=getLog(curDate); document.getElementById('ms-steps').value=l.steps||''; calcMStepsKcal(); }
   if(type==='sleep'){ const l=getLog(curDate); document.getElementById('msl-start').value=l.sleep.bedtime||'23:00'; document.getElementById('msl-end').value=l.sleep.wakeup||'07:00'; mSleepQ=l.sleep.quality||4; updMQ(); calcMSl(); }
-  if(type==='food'){ document.getElementById('mf-name').value=''; clearMFoodForm(); }
+  if(type==='food'){
+    // Solo resetta se NON abbiamo un alimento scansionato
+    if(!mSelectedFood){
+      document.getElementById('mf-name').value='';
+      clearMFoodForm();
+    }
+  }
   if(type==='weight'){
     document.getElementById('mw-date').value=today();
     document.getElementById('mw-kg').value='';
@@ -2954,7 +2966,7 @@ function closeMModal(type){
 // ── Mobile Food ──────────────────────────────────────
 let mSelectedFood = null;
 function clearMFoodForm(){
-  ['mf-kcal','mf-pro','mf-carb','mf-fat'].forEach(id=>document.getElementById(id).value='');
+  ['mf-kcal','mf-pro','mf-carb','mf-fat','mf-qty-manual','mf-kcal-base','mf-pro-base','mf-carb-base','mf-fat-base'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('mf-qty-row').style.display='none';
   document.getElementById('mf-manual-row').style.display='block';
   document.getElementById('mf-slot-row').style.display='none';
@@ -2987,6 +2999,42 @@ function calcMFoodFromDb(){
   document.getElementById('mf-pro').value=round2(mSelectedFood.pro*f);
   document.getElementById('mf-carb').value=round2(mSelectedFood.carb*f);
   document.getElementById('mf-fat').value=round2(mSelectedFood.fat*f);
+  // Salva i valori di base nel database (sempre per 100g)
+  document.getElementById('mf-kcal-base').value=mSelectedFood.kcal;
+  document.getElementById('mf-pro-base').value=mSelectedFood.pro;
+  document.getElementById('mf-carb-base').value=mSelectedFood.carb;
+  document.getElementById('mf-fat-base').value=mSelectedFood.fat;
+}
+function saveMFBase(){
+  // Quando l'utente modifica manualmente, salva i valori come "per 100g"
+  if(mSelectedFood) return; // Non fare nulla se viene dal database
+  document.getElementById('mf-kcal-base').value=parseFloat(document.getElementById('mf-kcal').value)||0;
+  document.getElementById('mf-pro-base').value=parseFloat(document.getElementById('mf-pro').value)||0;
+  document.getElementById('mf-carb-base').value=parseFloat(document.getElementById('mf-carb').value)||0;
+  document.getElementById('mf-fat-base').value=parseFloat(document.getElementById('mf-fat').value)||0;
+}
+function calcMFPortionMode(){
+  // Ricalcola i macro in base alla quantità usando i valori base salvati
+  const qty=parseFloat(document.getElementById('mf-qty-manual').value)||100;
+  if(!qty || qty <= 0) return;
+  
+  const kcal100=parseFloat(document.getElementById('mf-kcal-base').value)||parseFloat(document.getElementById('mf-kcal').value)||0;
+  const pro100=parseFloat(document.getElementById('mf-pro-base').value)||parseFloat(document.getElementById('mf-pro').value)||0;
+  const carb100=parseFloat(document.getElementById('mf-carb-base').value)||parseFloat(document.getElementById('mf-carb').value)||0;
+  const fat100=parseFloat(document.getElementById('mf-fat-base').value)||parseFloat(document.getElementById('mf-fat').value)||0;
+  
+  if(qty!==100){
+    const f=qty/100;
+    document.getElementById('mf-kcal').value=Math.round(kcal100*f);
+    document.getElementById('mf-pro').value=round2(pro100*f);
+    document.getElementById('mf-carb').value=round2(carb100*f);
+    document.getElementById('mf-fat').value=round2(fat100*f);
+  } else {
+    document.getElementById('mf-kcal').value=Math.round(kcal100);
+    document.getElementById('mf-pro').value=round2(pro100);
+    document.getElementById('mf-carb').value=round2(carb100);
+    document.getElementById('mf-fat').value=round2(fat100);
+  }
 }
 function openSlotAdd(slot){
   openMModal('food');
@@ -2999,7 +3047,8 @@ function addFoodMobile(){
   const kcal=parseFloat(document.getElementById('mf-kcal').value)||0;
   if(!name||!kcal){toast('⚠️ Inserisci nome e calorie',true);return;}
   const slot=document.getElementById('mf-slot2').value||document.getElementById('mf-slot').value;
-  const qty=parseFloat(document.getElementById('mf-qty-db').value)||0;
+  // Leggi da mf-qty-db se barcode/db, altrimenti da mf-qty-manual se inserimento manuale
+  const qty=parseFloat(document.getElementById('mf-qty-db').value)||parseFloat(document.getElementById('mf-qty-manual').value)||0;
   getLog(curDate).nutrition.meals.push({
     id:Date.now().toString(),name,kcal,
     pro:round2(parseFloat(document.getElementById('mf-pro').value)||0),
