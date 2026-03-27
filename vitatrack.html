@@ -249,6 +249,7 @@ textarea{resize:vertical;min-height:60px}
   /* Single column everything */
   .g2,.g3 { grid-template-columns: 1fr; }
   .fr,.fr3 { grid-template-columns: 1fr; }
+  .sleep-time-row { grid-template-columns: 1fr 1fr !important; }
   .bmr-grid { grid-template-columns: repeat(2,1fr); }
   /* Hide/show desktop vs mobile elements */
   .desktop-only { display: none !important; }
@@ -501,7 +502,7 @@ textarea{resize:vertical;min-height:60px}
 <div class="m-modal" id="m-modal-sleep">
   <div class="m-modal-hd"><h2>😴 Sonno</h2><button class="m-modal-close" onclick="closeMModal('sleep')">×</button></div>
   <div class="m-modal-body">
-    <div class="fr" style="grid-template-columns: 1fr 1fr !important;">
+    <div class="fr sleep-time-row">
       <div class="fg"><label>Addormentamento</label><input id="msl-start" type="time" value="23:00" oninput="calcMSl()"></div>
       <div class="fg"><label>Sveglia</label><input id="msl-end" type="time" value="07:00" oninput="calcMSl()"></div>
     </div>
@@ -1427,14 +1428,16 @@ function renderDash(){
     const sorted=[...S.weightLog].sort((a,b)=>a.date.localeCompare(b.date));
     const wLabels=sorted.map(e=>fmtDateShort(e.date));
     const wVals=sorted.map(e=>e.weight);
-    // Trend ideale: dal peso iniziale (p.weight) al peso obiettivo (p.targetWeight)
     const startW=p.weight||wVals[0];
     const endW=p.targetWeight||wVals[wVals.length-1];
     const firstDate=new Date(sorted[0].date+'T12:00:00');
     const lastDate=new Date(sorted[sorted.length-1].date+'T12:00:00');
     const daysPassed=Math.max(1,(lastDate-firstDate)/(1000*60*60*24));
-    const weightChange=endW-startW;
-    const velocita=weightChange/daysPassed;const remaining=endW-currentWeight(p);const daysToGoal=Math.max(1,Math.abs(remaining/velocita));
+    let weightChange=Math.abs(endW-startW);if(weightChange===0) weightChange=1;
+    const velocita=weightChange/daysPassed;
+    const lastWeight=wVals[wVals.length-1];
+    const remainingToGoal=Math.abs(endW-lastWeight);
+    const daysToGoal=Math.abs(remainingToGoal/velocita);
     const trendExtendDate=new Date(lastDate);trendExtendDate.setDate(trendExtendDate.getDate()+daysToGoal);
     let trendLabels=[...wLabels];let trendDates=[...sorted.map(e=>new Date(e.date+'T12:00:00'))];
     const cur=new Date(lastDate);while(cur<trendExtendDate){cur.setDate(cur.getDate()+1);trendLabels.push(fmtDateShort(cur.toISOString().split('T')[0]));trendDates.push(new Date(cur));}
@@ -2782,7 +2785,23 @@ function importData(input){
       const mode = document.getElementById('import-mode').value;
       if(mode === 'replace'){
         // Full replace — carica tutto incluso profilo
-        if(data.profile) S.profile = { ...S.profile, ...data.profile };  // Merge per mantenere defaults, sovrascrivi con import
+        if(data.profile){
+          S.profile.name = data.profile.name !== undefined ? data.profile.name : S.profile.name;
+          S.profile.age = data.profile.age !== undefined ? data.profile.age : S.profile.age;
+          S.profile.gender = data.profile.gender !== undefined ? data.profile.gender : S.profile.gender;
+          S.profile.height = data.profile.height !== undefined ? data.profile.height : S.profile.height;
+          S.profile.weight = data.profile.weight !== undefined ? data.profile.weight : S.profile.weight;
+          S.profile.targetWeight = data.profile.targetWeight !== undefined ? data.profile.targetWeight : S.profile.targetWeight;
+          S.profile.activityLevel = data.profile.activityLevel !== undefined ? data.profile.activityLevel : S.profile.activityLevel;
+          S.profile.goal = data.profile.goal !== undefined ? data.profile.goal : S.profile.goal;
+          S.profile.waterGoal = data.profile.waterGoal !== undefined ? data.profile.waterGoal : S.profile.waterGoal;
+          S.profile.sleepGoal = data.profile.sleepGoal !== undefined ? data.profile.sleepGoal : S.profile.sleepGoal;
+          S.profile.customKcal = data.profile.customKcal !== undefined ? data.profile.customKcal : S.profile.customKcal;
+          S.profile.macroMode = data.profile.macroMode !== undefined ? data.profile.macroMode : S.profile.macroMode;
+          S.profile.proteinPerKg = data.profile.proteinPerKg !== undefined ? data.profile.proteinPerKg : S.profile.proteinPerKg;
+          S.profile.carbPct = data.profile.carbPct !== undefined ? data.profile.carbPct : S.profile.carbPct;
+          S.profile.fatPct = data.profile.fatPct !== undefined ? data.profile.fatPct : S.profile.fatPct;
+        }
         S.foodDb = data.foodDb || [];
         S.recipes = data.recipes || [];
         S.weightLog = data.weightLog || [];
@@ -3364,8 +3383,9 @@ function renderMDash(){
         const endW=p.targetWeight||wEntries[wEntries.length-1].weight;
         const firstDate=wEntries[0].isStart?new Date(now):new Date(wEntries[0].date+'T12:00:00');const lastDate=new Date(wEntries[wEntries.length-1].date?wEntries[wEntries.length-1].date+'T12:00:00':now);
         const daysPassed=Math.max(1,(lastDate-firstDate)/(1000*60*60*24));
-        const weightChange=endW-startW;
-        const velocita=weightChange/daysPassed;const remaining=endW-curW;const daysToGoal=Math.max(1,Math.abs(remaining/velocita));
+        const weightChange=Math.abs(endW-startW);if(weightChange===0){weightChange=1;}const velocita=weightChange/daysPassed;
+        const lastWeight=wEntries[wEntries.length-1].weight;const remainingToGoal=Math.abs(endW-lastWeight);
+        let daysToGoal=Math.abs(remainingToGoal/velocita);
         const trendExtendDate=new Date(lastDate);trendExtendDate.setDate(trendExtendDate.getDate()+daysToGoal);
         let trendLabels=[...wEntries.map(e=>e.isStart?'Start':fmtDateShort(e.date))];let trendDates=[...wEntries.map((e,i)=>i===0?firstDate:new Date(e.date+'T12:00:00'))];
         const cur=new Date(lastDate);while(cur<trendExtendDate){cur.setDate(cur.getDate()+1);trendLabels.push(fmtDateShort(cur.toISOString().split('T')[0]));trendDates.push(new Date(cur));}
