@@ -1816,21 +1816,86 @@ function addW(ml){const l=getLog(curDate);l.nutrition.water=Math.max(0,(l.nutrit
 function foodSearch(val){
   const s=document.getElementById('f-suggest');
   if(!val||val.length<1){s.style.display='none';selectedFoodDb=null;document.getElementById('save-to-db-btn').style.display='none';return;}
-  const matches=S.foodDb.filter(f=>f.name.toLowerCase().includes(val.toLowerCase()));
-  if(!matches.length){s.style.display='none';document.getElementById('save-to-db-btn').style.display='inline-flex';return;}
-  s.innerHTML=matches.slice(0,8).map(f=>`<div class="fs-item" onclick="selectFood('${f.id}')"><div>${f.name}</div><div class="fs-macros">Per 100g: ${f.kcal}kcal · ${f.pro}g P · ${f.carb}g C · ${f.fat}g G</div></div>`).join('');
-  s.style.display='block';
-  document.getElementById('save-to-db-btn').style.display='none';
+
+  // Prima cerca nel database locale
+  const localMatches=S.foodDb.filter(f=>f.name.toLowerCase().includes(val.toLowerCase()));
+
+  if(localMatches.length > 0){
+    // Mostra risultati locali
+    s.innerHTML=localMatches.slice(0,6).map(f=>`<div class="fs-item" onclick="selectFood('${f.id}')"><div>${f.name}</div><div class="fs-macros">Per 100g: ${f.kcal}kcal · ${f.pro}g P · ${f.carb}g C · ${f.fat}g G</div></div>`).join('');
+    s.style.display='block';
+    document.getElementById('save-to-db-btn').style.display='none';
+  } else {
+    // Nessun risultato locale, cerca su OpenFoodFacts
+    s.innerHTML='<div style="padding:12px;text-align:center;font-size:12px;color:var(--text3)">🔍 Cercando su OpenFoodFacts...</div>';
+    s.style.display='block';
+    document.getElementById('save-to-db-btn').style.display='none';
+
+    searchOpenFoodFactsByName(val, 6).then(onlineResults => {
+      if(onlineResults.length > 0){
+        s.innerHTML=onlineResults.map(f=>`<div class="fs-item" onclick="selectFood('${f.id}')"><div>${f.name}</div><div class="fs-macros">Per 100g: ${f.kcal}kcal · ${f.pro}g P · ${f.carb}g C · ${f.fat}g G</div><div style="font-size:10px;color:var(--text4);margin-top:2px">🌐 OpenFoodFacts</div></div>`).join('');
+      } else {
+        s.innerHTML='<div style="padding:12px;text-align:center;font-size:12px;color:var(--text3)">Nessun risultato trovato. Inserisci manualmente i valori.</div>';
+        document.getElementById('save-to-db-btn').style.display='inline-flex';
+      }
+    }).catch(err => {
+      console.warn('Food search failed:', err);
+      s.innerHTML='<div style="padding:12px;text-align:center;font-size:12px;color:var(--text3)">Errore di connessione. Inserisci manualmente i valori.</div>';
+      document.getElementById('save-to-db-btn').style.display='inline-flex';
+    });
+  }
 }
 function selectFood(id){
-  const food=S.foodDb.find(f=>f.id===id);if(!food)return;
-  selectedFoodDb=food;
-  document.getElementById('f-name').value=food.name;
-  document.getElementById('f-suggest').style.display='none';
-  document.getElementById('f-qty-row').style.display='block';
-  document.getElementById('f-manual-row').style.display='none';
-  document.getElementById('f-manual-row2').style.display='none';
-  document.getElementById('f-qty-db').value=100;
+  let food;
+
+  if(id.startsWith('_off_')){
+    // Alimento da OpenFoodFacts - cerca nei risultati recenti o ricarica
+    // Per semplicità, rifacciamo la ricerca per ottenere i dati completi
+    const query = document.getElementById('f-name').value.trim();
+    searchOpenFoodFactsByName(query, 10).then(results => {
+      const selected = results.find(f => f.id === id);
+      if(selected){
+        // Salva nel database locale per future ricerche
+        const dbFood = {
+          id: Date.now().toString(),
+          name: selected.name,
+          cat: selected.category || 'altro',
+          kcal: selected.kcal,
+          pro: selected.pro,
+          carb: selected.carb,
+          fat: selected.fat,
+          fiber: selected.fiber || 0,
+          barcode: selected.barcode
+        };
+        S.foodDb.push(dbFood);
+        save();
+
+        // Seleziona l'alimento appena salvato
+        selectedFoodDb = dbFood;
+        document.getElementById('f-name').value = selected.name;
+        document.getElementById('f-suggest').style.display = 'none';
+        document.getElementById('f-qty-row').style.display = 'block';
+        document.getElementById('f-manual-row').style.display = 'none';
+        document.getElementById('f-manual-row2').style.display = 'none';
+        document.getElementById('f-qty-db').value = 100;
+        calcFoodFromDb();
+        toast('✅ Alimento aggiunto al database!');
+      }
+    });
+    return;
+  }
+
+  // Alimento dal database locale
+  food = S.foodDb.find(f=>f.id===id);
+  if(!food) return;
+
+  selectedFoodDb = food;
+  document.getElementById('f-name').value = food.name;
+  document.getElementById('f-suggest').style.display = 'none';
+  document.getElementById('f-qty-row').style.display = 'block';
+  document.getElementById('f-manual-row').style.display = 'none';
+  document.getElementById('f-manual-row2').style.display = 'none';
+  document.getElementById('f-qty-db').value = 100;
   calcFoodFromDb();
 }
 function calcFoodFromDb(){
@@ -2622,6 +2687,43 @@ async function fetchOpenFoodFacts(barcode){
   }
 }
 
+// ── SEARCH FOOD BY NAME ON OPENFOODFACTS ─────────────────────────────
+async function searchOpenFoodFactsByName(query, limit = 8){
+  try {
+    const res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&json=1&countries_tags=en:italy&countries_tags=en:united-states&countries_tags=en:france&limit=${limit}&sort_by=popularity`);
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+
+    if(!data.products || data.products.length === 0) return [];
+
+    return data.products.map(p => {
+      const n = p.nutriments || {};
+      const kcal  = round2(n['energy-kcal_100g'] || n['energy-kcal'] || (n['energy_100g'] || n['energy'] || 0) / 4.184 || 0);
+      const prot  = round2(n['proteins_100g']       || n['proteins']       || 0);
+      const carb  = round2(n['carbohydrates_100g']  || n['carbohydrates']  || 0);
+      const fat   = round2(n['fat_100g']            || n['fat']            || 0);
+      const fiber = round2(n['fiber_100g']          || n['fiber']          || 0);
+      const name  = p.product_name_it || p.product_name || p.generic_name_it || p.generic_name || 'Prodotto sconosciuto';
+      const brand = p.brands ? ' — ' + p.brands.split(',')[0].trim() : '';
+      const fullName = name + brand;
+      const cat   = p.categories_tags ? (p.categories_tags[0]||'').replace(/^(en|it):/, '') : 'altro';
+
+      return {
+        id: '_off_' + p.code,
+        name: fullName,
+        kcal, pro: prot, carb, fat, fiber,
+        category: cat,
+        barcode: p.code,
+        source: 'openfoodfacts'
+      };
+    }).filter(f => f.kcal > 0); // Solo alimenti con calorie valide
+
+  } catch(err){
+    console.warn('OpenFoodFacts search failed:', err.message);
+    return [];
+  }
+}
+
 function confirmScan(){
   if(!lastScannedFood) return;
   const f = lastScannedFood;
@@ -2961,20 +3063,78 @@ function clearMFoodForm(){
 function mFoodSearch(val){
   const s=document.getElementById('mf-suggest');
   if(!val||val.length<1){s.style.display='none';mSelectedFood=null;return;}
-  const matches=S.foodDb.filter(f=>f.name.toLowerCase().includes(val.toLowerCase()));
-  if(!matches.length){s.style.display='none';return;}
-  s.innerHTML=matches.slice(0,6).map(f=>`<div class="fs-item" onclick="mSelectFood('${f.id}')"><div>${f.name}</div><div class="fs-macros">100g: ${f.kcal}kcal · ${f.pro}g P · ${f.carb}g C · ${f.fat}g G</div></div>`).join('');
-  s.style.display='block';
+
+  // Prima cerca nel database locale
+  const localMatches=S.foodDb.filter(f=>f.name.toLowerCase().includes(val.toLowerCase()));
+
+  if(localMatches.length > 0){
+    // Mostra risultati locali
+    s.innerHTML=localMatches.slice(0,4).map(f=>`<div class="fs-item" onclick="mSelectFood('${f.id}')"><div>${f.name}</div><div class="fs-macros">100g: ${f.kcal}kcal · ${f.pro}g P · ${f.carb}g C · ${f.fat}g G</div></div>`).join('');
+    s.style.display='block';
+  } else {
+    // Nessun risultato locale, cerca su OpenFoodFacts
+    s.innerHTML='<div style="padding:8px;text-align:center;font-size:11px;color:var(--text3)">🔍 Cercando...</div>';
+    s.style.display='block';
+
+    searchOpenFoodFactsByName(val, 4).then(onlineResults => {
+      if(onlineResults.length > 0){
+        s.innerHTML=onlineResults.map(f=>`<div class="fs-item" onclick="mSelectFood('${f.id}')"><div>${f.name}</div><div class="fs-macros">100g: ${f.kcal}kcal · ${f.pro}g P · ${f.carb}g C · ${f.fat}g G</div><div style="font-size:9px;color:var(--text4);margin-top:1px">🌐 OFF</div></div>`).join('');
+      } else {
+        s.innerHTML='<div style="padding:8px;text-align:center;font-size:11px;color:var(--text3)">Nessun risultato</div>';
+      }
+    }).catch(err => {
+      console.warn('Mobile food search failed:', err);
+      s.innerHTML='<div style="padding:8px;text-align:center;font-size:11px;color:var(--text3)">Errore connessione</div>';
+    });
+  }
 }
 function mSelectFood(id){
-  mSelectedFood=S.foodDb.find(f=>f.id===id);
+  if(id.startsWith('_off_')){
+    // Alimento da OpenFoodFacts - cerca nei risultati recenti
+    const query = document.getElementById('mf-name').value.trim();
+    searchOpenFoodFactsByName(query, 5).then(results => {
+      const selected = results.find(f => f.id === id);
+      if(selected){
+        // Salva nel database locale per future ricerche
+        const dbFood = {
+          id: Date.now().toString(),
+          name: selected.name,
+          cat: selected.category || 'altro',
+          kcal: selected.kcal,
+          pro: selected.pro,
+          carb: selected.carb,
+          fat: selected.fat,
+          fiber: selected.fiber || 0,
+          barcode: selected.barcode
+        };
+        S.foodDb.push(dbFood);
+        save();
+
+        // Seleziona l'alimento appena salvato
+        mSelectedFood = dbFood;
+        document.getElementById('mf-name').value = selected.name;
+        document.getElementById('mf-suggest').style.display = 'none';
+        document.getElementById('mf-qty-row').style.display = 'block';
+        document.getElementById('mf-manual-row').style.display = 'none';
+        document.getElementById('mf-slot-row').style.display = 'block';
+        document.getElementById('mf-qty-db').value = 100;
+        calcMFoodFromDb();
+        toast('✅ Alimento aggiunto!');
+      }
+    });
+    return;
+  }
+
+  // Alimento dal database locale
+  mSelectedFood = S.foodDb.find(f=>f.id===id);
   if(!mSelectedFood) return;
-  document.getElementById('mf-name').value=mSelectedFood.name;
-  document.getElementById('mf-suggest').style.display='none';
-  document.getElementById('mf-qty-row').style.display='block';
-  document.getElementById('mf-manual-row').style.display='none';
-  document.getElementById('mf-slot-row').style.display='block';
-  document.getElementById('mf-qty-db').value=100;
+
+  document.getElementById('mf-name').value = mSelectedFood.name;
+  document.getElementById('mf-suggest').style.display = 'none';
+  document.getElementById('mf-qty-row').style.display = 'block';
+  document.getElementById('mf-manual-row').style.display = 'none';
+  document.getElementById('mf-slot-row').style.display = 'block';
+  document.getElementById('mf-qty-db').value = 100;
   calcMFoodFromDb();
 }
 function calcMFoodFromDb(){
