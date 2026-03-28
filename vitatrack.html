@@ -1825,12 +1825,28 @@ function foodSearch(val){
     s.innerHTML=localMatches.slice(0,6).map(f=>`<div class="fs-item" onclick="selectFood('${f.id}')"><div>${f.name}</div><div class="fs-macros">Per 100g: ${f.kcal}kcal · ${f.pro}g P · ${f.carb}g C · ${f.fat}g G</div></div>`).join('');
     s.style.display='block';
     document.getElementById('save-to-db-btn').style.display='none';
-  } else {
-    // Nessun risultato locale, cerca su OpenFoodFacts
-    s.innerHTML='<div style="padding:12px;text-align:center;font-size:12px;color:var(--text3)">🔍 Cercando su OpenFoodFacts...</div>';
-    s.style.display='block';
-    document.getElementById('save-to-db-btn').style.display='none';
 
+    // Cancella eventuali timeout precedenti
+    if(foodSearchTimeout) clearTimeout(foodSearchTimeout);
+    return; // Non cercare online se abbiamo risultati locali
+  }
+
+  // Nessun risultato locale - prepara ricerca online con debounce
+  s.innerHTML='<div style="padding:12px;text-align:center;font-size:12px;color:var(--text3)">🔍 Cercando...</div>';
+  s.style.display='block';
+  document.getElementById('save-to-db-btn').style.display='none';
+
+  // Cancella timeout precedente
+  if(foodSearchTimeout) clearTimeout(foodSearchTimeout);
+
+  // Se query troppo corta, non cercare online
+  if(val.length < 3){
+    s.innerHTML='<div style="padding:12px;text-align:center;font-size:12px;color:var(--text3)">Digita almeno 3 caratteri per cercare online</div>';
+    return;
+  }
+
+  // Imposta nuovo timeout per ricerca online (500ms di debounce)
+  foodSearchTimeout = setTimeout(() => {
     searchOpenFoodFactsByName(val, 6).then(onlineResults => {
       if(onlineResults.length > 0){
         s.innerHTML=onlineResults.map(f=>`<div class="fs-item" onclick="selectFood('${f.id}')"><div>${f.name}</div><div class="fs-macros">Per 100g: ${f.kcal}kcal · ${f.pro}g P · ${f.carb}g C · ${f.fat}g G</div><div style="font-size:10px;color:var(--text4);margin-top:2px">🌐 OpenFoodFacts</div></div>`).join('');
@@ -1843,7 +1859,7 @@ function foodSearch(val){
       s.innerHTML='<div style="padding:12px;text-align:center;font-size:12px;color:var(--text3)">Errore di connessione. Inserisci manualmente i valori.</div>';
       document.getElementById('save-to-db-btn').style.display='inline-flex';
     });
-  }
+  }, 500);
 }
 function selectFood(id){
   let food;
@@ -2688,15 +2704,28 @@ async function fetchOpenFoodFacts(barcode){
 }
 
 // ── SEARCH FOOD BY NAME ON OPENFOODFACTS ─────────────────────────────
+let foodSearchTimeout = null;
+let lastSearchQuery = '';
+let searchCache = new Map(); // Cache per evitare query duplicate
+
 async function searchOpenFoodFactsByName(query, limit = 8){
+  // Controlla cache prima
+  const cacheKey = query.toLowerCase().trim();
+  if(searchCache.has(cacheKey)){
+    return searchCache.get(cacheKey);
+  }
+
   try {
     const res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&json=1&countries_tags=en:italy&countries_tags=en:united-states&countries_tags=en:france&limit=${limit}&sort_by=popularity`);
     if(!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
 
-    if(!data.products || data.products.length === 0) return [];
+    if(!data.products || data.products.length === 0) {
+      searchCache.set(cacheKey, []); // Cache anche risultati vuoti
+      return [];
+    }
 
-    return data.products.map(p => {
+    const results = data.products.map(p => {
       const n = p.nutriments || {};
       const kcal  = round2(n['energy-kcal_100g'] || n['energy-kcal'] || (n['energy_100g'] || n['energy'] || 0) / 4.184 || 0);
       const prot  = round2(n['proteins_100g']       || n['proteins']       || 0);
@@ -2718,8 +2747,15 @@ async function searchOpenFoodFactsByName(query, limit = 8){
       };
     }).filter(f => f.kcal > 0); // Solo alimenti con calorie valide
 
+    // Cache i risultati per 5 minuti
+    searchCache.set(cacheKey, results);
+    setTimeout(() => searchCache.delete(cacheKey), 5 * 60 * 1000);
+
+    return results;
+
   } catch(err){
     console.warn('OpenFoodFacts search failed:', err.message);
+    searchCache.set(cacheKey, []); // Cache anche gli errori per evitare retry immediati
     return [];
   }
 }
@@ -3071,11 +3107,27 @@ function mFoodSearch(val){
     // Mostra risultati locali
     s.innerHTML=localMatches.slice(0,4).map(f=>`<div class="fs-item" onclick="mSelectFood('${f.id}')"><div>${f.name}</div><div class="fs-macros">100g: ${f.kcal}kcal · ${f.pro}g P · ${f.carb}g C · ${f.fat}g G</div></div>`).join('');
     s.style.display='block';
-  } else {
-    // Nessun risultato locale, cerca su OpenFoodFacts
-    s.innerHTML='<div style="padding:8px;text-align:center;font-size:11px;color:var(--text3)">🔍 Cercando...</div>';
-    s.style.display='block';
 
+    // Cancella eventuali timeout precedenti
+    if(foodSearchTimeout) clearTimeout(foodSearchTimeout);
+    return; // Non cercare online se abbiamo risultati locali
+  }
+
+  // Nessun risultato locale - prepara ricerca online con debounce
+  s.innerHTML='<div style="padding:8px;text-align:center;font-size:11px;color:var(--text3)">🔍 Cercando...</div>';
+  s.style.display='block';
+
+  // Cancella timeout precedente
+  if(foodSearchTimeout) clearTimeout(foodSearchTimeout);
+
+  // Se query troppo corta, non cercare online
+  if(val.length < 3){
+    s.innerHTML='<div style="padding:8px;text-align:center;font-size:11px;color:var(--text3)">Min 3 caratteri</div>';
+    return;
+  }
+
+  // Imposta nuovo timeout per ricerca online (500ms di debounce)
+  foodSearchTimeout = setTimeout(() => {
     searchOpenFoodFactsByName(val, 4).then(onlineResults => {
       if(onlineResults.length > 0){
         s.innerHTML=onlineResults.map(f=>`<div class="fs-item" onclick="mSelectFood('${f.id}')"><div>${f.name}</div><div class="fs-macros">100g: ${f.kcal}kcal · ${f.pro}g P · ${f.carb}g C · ${f.fat}g G</div><div style="font-size:9px;color:var(--text4);margin-top:1px">🌐 OFF</div></div>`).join('');
@@ -3086,7 +3138,7 @@ function mFoodSearch(val){
       console.warn('Mobile food search failed:', err);
       s.innerHTML='<div style="padding:8px;text-align:center;font-size:11px;color:var(--text3)">Errore connessione</div>';
     });
-  }
+  }, 500);
 }
 function mSelectFood(id){
   if(id.startsWith('_off_')){
