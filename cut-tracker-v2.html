@@ -189,15 +189,12 @@ input:focus,textarea:focus{border-color:var(--accent);}
       <div class="target-box" id="target-weight-box"></div>
       <div class="card" style="margin-bottom:14px">
         <div class="card-title">Profilo atleta</div>
-        <div class="profile-stat"><span class="k">Età / sesso</span><span class="v">38 anni · M</span></div>
-        <div class="profile-stat"><span class="k">Altezza</span><span class="v">173 cm</span></div>
-        <div class="profile-stat"><span class="k">Peso iniziale</span><span class="v">78.8 kg</span></div>
-        <div class="profile-stat"><span class="k">BMR (Mifflin)</span><span class="v">1684 kcal</span></div>
-        <div class="profile-stat"><span class="k">TDEE stimato</span><span class="v" style="color:var(--teal)">~2350 kcal</span></div>
-        <div class="profile-stat"><span class="k">Target proteine</span><span class="v">≥126g/die</span></div>
-        <div class="profile-stat"><span class="k">Target acqua</span><span class="v">≥2750ml/die</span></div>
+        <div id="profile-stats"></div>
         <div class="divider"></div>
-        <div style="font-size:11px;color:var(--text3)">Skill: back lever full · trazioni +15kg · dip +25kg · chin-up +20kg</div>
+        <div style="display:flex;gap:8px;margin-top:12px;">
+          <button class="btn" onclick="editProfile()" style="flex:1;padding:10px;font-size:12px;">Modifica profilo</button>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-top:8px;">Skill: back lever full · trazioni +15kg · dip +25kg · chin-up +20kg</div>
       </div>
       <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;font-weight:500;">Raccomandazioni settimana corrente</div>
       <div id="insights-list"></div>
@@ -241,7 +238,7 @@ input:focus,textarea:focus{border-color:var(--accent);}
       <div id="form-workout" style="display:none">
         <div class="form-section"><label class="form-label">Data</label><input type="date" id="wo-date"></div>
         <div class="form-section"><label class="form-label">Titolo sessione</label><input type="text" id="wo-title" placeholder="es. Trazioni + front lever"></div>
-        <div class="form-section"><label class="form-label">Note libere</label><textarea id="wo-notes" rows="5" placeholder="Incolla i dati o descrivi la sessione..."></textarea></div>
+        <div class="form-section"><label class="form-label">Note libere</label><textarea id="wo-notes" rows="5" placeholder="Incolla i dati o descrivi la sessione..."></textarea><button class="btn" onclick="startVoiceWorkout()" style="width:auto;margin-top:8px;padding:8px 12px;font-size:12px;">🎤 Comando vocale</button></div>
         <button class="btn" onclick="saveWorkout()">Salva allenamento</button>
       </div>
     </div>
@@ -252,6 +249,7 @@ input:focus,textarea:focus{border-color:var(--accent);}
         <button class="btn" onclick="exportHistory()" style="width:auto;padding:10px 14px;">Esporta storico</button>
         <button class="btn" onclick="document.getElementById('import-file').click()" style="width:auto;padding:10px 14px;">Importa storico</button>
         <input id="import-file" type="file" accept="application/json" style="display:none" onchange="importHistory(event)">
+        <button class="btn" onclick="resetApp()" style="width:auto;padding:10px 14px;background:var(--red);color:#fff;">Reset app</button>
       </div>
       <div class="card"><div class="card-title">Tutte le giornate</div><div id="history-list"></div></div>
       <div class="card" style="margin-top:12px"><div class="card-title">Allenamenti registrati</div><div id="workout-list"></div></div>
@@ -404,6 +402,44 @@ function saveUserProfile(){
   buildAll();
   switchTab('dashboard');
   toast('✓ Profilo salvato');
+}
+
+function editProfile(){
+  if(!PROFILE)return;
+  document.getElementById('profile-name').value=PROFILE.name||'';
+  document.getElementById('profile-age').value=PROFILE.age||'';
+  document.getElementById('profile-sex').value=PROFILE.sex||'M';
+  document.getElementById('profile-height').value=PROFILE.height||'';
+  document.getElementById('profile-weight').value=PROFILE.startWeight||'';
+  document.getElementById('profile-target-weight').value=PROFILE.targetWeight||'';
+  document.getElementById('profile-workouts-week').value=PROFILE.workoutsWeek||'';
+  showSetupView();
+}
+
+function resetApp(){
+  if(!confirm('Resettare completamente l\'app? Tutti i dati verranno persi.'))return;
+  localStorage.clear();
+  location.reload();
+}
+
+function startVoiceWorkout(){
+  if(!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)){
+    toast('Riconoscimento vocale non supportato dal browser');
+    return;
+  }
+  const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+  recognition.lang = 'it-IT';
+  recognition.continuous = false;
+  recognition.interimResults = false;
+  recognition.onresult = function(event){
+    const transcript = event.results[0][0].transcript;
+    const textarea = document.getElementById('wo-notes');
+    textarea.value += (textarea.value ? '\n' : '') + transcript;
+    toast('✓ Voce registrata');
+  };
+  recognition.onerror = function(){toast('Errore riconoscimento vocale');};
+  recognition.start();
+  toast('Ascoltando...');
 }
 
 function buildDashboard(){
@@ -594,6 +630,18 @@ function buildTargetBox(){
 // INSIGHTS
 function buildInsights(){
   buildTargetBox();
+  if(PROFILE){
+    const profileStats = document.getElementById('profile-stats');
+    profileStats.innerHTML = `
+      <div class="profile-stat"><span class="k">Età / sesso</span><span class="v">${PROFILE.age} anni · ${PROFILE.sex}</span></div>
+      <div class="profile-stat"><span class="k">Altezza</span><span class="v">${PROFILE.height} cm</span></div>
+      <div class="profile-stat"><span class="k">Peso iniziale</span><span class="v">${PROFILE.startWeight} kg</span></div>
+      <div class="profile-stat"><span class="k">BMR (Mifflin)</span><span class="v">${PROFILE.bmr} kcal</span></div>
+      <div class="profile-stat"><span class="k">TDEE stimato</span><span class="v" style="color:var(--teal)">~${PROFILE.tdee} kcal</span></div>
+      <div class="profile-stat"><span class="k">Target proteine</span><span class="v">≥${PROFILE.protTarget}g/die</span></div>
+      <div class="profile-stat"><span class="k">Target acqua</span><span class="v">≥${PROFILE.waterTarget}ml/die</span></div>
+    `;
+  }
   const all=[...days].sort((a,b)=>a.date.localeCompare(b.date));
   const prev=activeFilter;activeFilter='max';
   const s=getStats();activeFilter=prev;
@@ -798,6 +846,19 @@ if(allDates.length){
 }
 
 buildAll();
+
+// Swipe tabs
+let touchStartX=0,touchEndX=0;
+document.getElementById('content').addEventListener('touchstart',e=>{touchStartX=e.changedTouches[0].screenX;});
+document.getElementById('content').addEventListener('touchend',e=>{
+  touchEndX=e.changedTouches[0].screenX;
+  const diff=touchEndX-touchStartX;
+  if(Math.abs(diff)>50){
+    const current=VIEWS.findIndex(v=>document.getElementById('view-'+v).classList.contains('active'));
+    if(diff>0&&current>0){switchTab(VIEWS[current-1]);}
+    else if(diff<0&&current<VIEWS.length-1){switchTab(VIEWS[current+1]);}
+  }
+});
 
 // PWA
 if('serviceWorker' in navigator){
