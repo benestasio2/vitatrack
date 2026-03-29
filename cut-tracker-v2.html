@@ -14,8 +14,8 @@
 <style>
 :root{--bg:#080808;--bg1:#111111;--bg2:#1a1a1a;--bg3:#242424;--border:#2e2e2e;--border2:#3a3a3a;--text:#f0f0f0;--text2:#888;--text3:#555;--accent:#b8ff57;--accent-dim:rgba(184,255,87,0.12);--blue:#4a9eff;--orange:#ff8c3a;--teal:#3ecfaa;--red:#ff5757;--purple:#a78bfa;--warn:#ffb547;--warn-bg:rgba(255,181,71,0.1);--ok-bg:rgba(62,207,170,0.1);--rad:10px;--rad-sm:6px;}
 *{box-sizing:border-box;margin:0;padding:0;}
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:15px;overflow:hidden;}
-#app{display:flex;flex-direction:column;height:100vh;max-width:480px;margin:0 auto;}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:15px;overflow:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
+#app{display:flex;flex-direction:column;height:100vh;max-width:480px;margin:0 auto;padding-bottom:env(safe-area-inset-bottom,0);}
 #header{padding:16px 20px 0;flex-shrink:0;}
 #header h1{font-size:22px;font-weight:600;letter-spacing:-0.5px;}
 #header h1 span{color:var(--accent);}
@@ -23,7 +23,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Space 
 #tabs{display:flex;gap:2px;padding:14px 20px 0;flex-shrink:0;border-bottom:1px solid var(--border);}
 .tab{flex:1;text-align:center;padding:8px 4px;font-size:12px;font-weight:500;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.2s;letter-spacing:0.03em;text-transform:uppercase;}
 .tab.active{color:var(--accent);border-bottom-color:var(--accent);}
-#content{flex:1;overflow-y:auto;padding:20px;scroll-behavior:smooth;}
+#content{flex:1;overflow-y:auto;padding:20px 20px calc(20px + env(safe-area-inset-bottom,16px));scroll-behavior:smooth;scroll-padding-bottom:calc(20px + env(safe-area-inset-bottom,16px));}
 #content::-webkit-scrollbar{width:3px;}
 #content::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
 .view{display:none;}.view.active{display:block;animation:fadeIn 0.25s ease;}
@@ -103,6 +103,8 @@ input:focus,textarea:focus{border-color:var(--accent);}
 .workout-card .wc-title{font-size:13px;font-weight:600;}
 .workout-card .wc-date{font-size:11px;color:var(--text3);font-family:'Space Mono',monospace;}
 /* TOAST */
+.btn-small{display:inline-flex;align-items:center;justify-content:center;padding:6px 10px;font-size:11px;font-weight:600;border:none;border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer;transition:opacity .2s;margin-left:8px;}
+.btn-small:hover{opacity:0.85;}
 .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--bg2);border:1px solid var(--border2);border-radius:var(--rad);padding:10px 18px;font-size:13px;font-weight:500;opacity:0;transition:all 0.3s;pointer-events:none;z-index:999;white-space:nowrap;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 @media(min-width:480px){#app{border-left:1px solid var(--border);border-right:1px solid var(--border);}}
@@ -231,6 +233,11 @@ input:focus,textarea:focus{border-color:var(--accent);}
 
     <!-- HISTORY -->
     <div class="view" id="view-history">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap;">
+        <button class="btn" onclick="exportHistory()" style="width:auto;padding:10px 14px;">Esporta storico</button>
+        <button class="btn" onclick="document.getElementById('import-file').click()" style="width:auto;padding:10px 14px;">Importa storico</button>
+        <input id="import-file" type="file" accept="application/json" style="display:none" onchange="importHistory(event)">
+      </div>
       <div class="card"><div class="card-title">Tutte le giornate</div><div id="history-list"></div></div>
       <div class="card" style="margin-top:12px"><div class="card-title">Allenamenti registrati</div><div id="workout-list"></div></div>
     </div>
@@ -602,14 +609,19 @@ function buildHistory(){
     const wTag=d.water==null?`<span class="water-tag nd">H₂O n.d.</span>`:d.water<PROFILE.waterTarget?`<span class="water-tag low">${round(d.water/1000,1)}L</span>`:`<span class="water-tag ok">${round(d.water/1000,1)}L</span>`;
     const el=document.createElement('div');el.className='day-item';
     el.innerHTML=`<span class="day-date">${fmtDate(d.date)}</span><div class="day-bars"><div class="bar-row"><div class="bar-bg"><div class="bar-fill" style="width:${round(d.prot*4/2800*100)}%;background:#4a9eff"></div></div><span class="bar-val">${d.prot}g</span></div><div class="bar-row"><div class="bar-bg"><div class="bar-fill" style="width:${round(d.fat*9/2800*100)}%;background:#ff8c3a"></div></div><span class="bar-val">${d.fat}g</span></div><div class="bar-row"><div class="bar-bg"><div class="bar-fill" style="width:${round(d.carb*4/2800*100)}%;background:#3ecfaa"></div></div><span class="bar-val">${d.carb}g</span></div></div><span class="day-kcal">${d.kcal}</span>${d.gym?'<span class="gym-tag">GYM</span>':''}${wTag}${d.weight?`<span style="font-family:'Space Mono',monospace;font-size:11px;color:var(--text3);white-space:nowrap">${d.weight}kg</span>`:''}`;
+    const deleteBtn=document.createElement('button');
+    deleteBtn.className='btn-small';
+    deleteBtn.textContent='Elimina';
+    deleteBtn.onclick=()=>deleteDay(d.date);
+    el.appendChild(deleteBtn);
     cont.appendChild(el);
   });
   const wcont=document.getElementById('workout-list');wcont.innerHTML='';
   const ws=[...workouts].sort((a,b)=>b.date.localeCompare(a.date));
   if(!ws.length){wcont.innerHTML='<p style="color:var(--text3);font-size:13px">Nessun allenamento.</p>';return;}
-  ws.forEach(w=>{
+  ws.forEach((w,i)=>{
     const el=document.createElement('div');el.className='workout-card';
-    el.innerHTML=`<div class="wc-header"><div class="wc-title">${w.title}</div><div class="wc-date">${fmtDate(w.date)}</div></div><div style="font-size:12px;color:var(--text2);white-space:pre-line;line-height:1.5">${w.notes}</div>`;
+    el.innerHTML=`<div class="wc-header"><div><div class="wc-title">${w.title}</div><div class="wc-date">${fmtDate(w.date)}</div></div><div><button class="btn-small" style="margin-right:0" onclick="deleteWorkout(${i})">Elimina</button></div></div><div style="font-size:12px;color:var(--text2);white-space:pre-line;line-height:1.5">${w.notes}</div>`;
     wcont.appendChild(el);
   });
 }
@@ -640,6 +652,43 @@ function saveWorkout(){
   if(!date||!title){toast('Inserisci data e titolo');return;}
   workouts.push({date,title,notes});saveData(days,workouts);buildHistory();
   toast('✓ Allenamento salvato');document.getElementById('wo-title').value='';document.getElementById('wo-notes').value='';
+}
+function deleteDay(date){
+  if(!confirm('Eliminare la giornata di '+date+'?'))return;
+  days=days.filter(d=>d.date!==date);saveData(days,workouts);buildAll();toast('✓ Giornata eliminata');
+}
+function deleteWorkout(idx){
+  const sorted=[...workouts].sort((a,b)=>b.date.localeCompare(a.date));
+  const target=sorted[idx];
+  if(!target)return;
+  if(!confirm('Eliminare l\'allenamento "'+target.title+'" del '+target.date+'?'))return;
+  const realIndex=workouts.findIndex(w=>w===target);
+  if(realIndex>=0)workouts.splice(realIndex,1);
+  saveData(days,workouts);buildHistory();toast('✓ Allenamento eliminato');
+}
+function exportHistory(){
+  const data=JSON.stringify({days,workouts},null,2);
+  const blob=new Blob([data],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='cutlog-history-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+  toast('✓ Esportazione pronta');
+}
+function importHistory(event){
+  const file=event.target.files&&event.target.files[0];
+  if(!file){return;}
+  const reader=new FileReader();
+  reader.onload=function(){
+    try{
+      const imported=JSON.parse(reader.result);
+      if(!imported||!Array.isArray(imported.days)||!Array.isArray(imported.workouts))throw new Error();
+      if(!confirm('Il caricamento sovrascriverà i dati correnti. Continuare?'))return;
+      days=imported.days;workouts=imported.workouts;
+      saveData(days,workouts);buildAll();toast('✓ Importazione completata');
+      buildFilterBar();
+    }catch(e){toast('File JSON non valido');}
+  };
+  reader.readAsText(file);
+  event.target.value='';
 }
 let logMode='day';
 function switchLogMode(m){logMode=m;document.getElementById('form-day').style.display=m==='day'?'block':'none';document.getElementById('form-workout').style.display=m==='workout'?'block':'none';document.getElementById('tog-day').classList.toggle('active',m==='day');document.getElementById('tog-workout').classList.toggle('active',m==='workout');}
