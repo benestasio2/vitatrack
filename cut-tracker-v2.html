@@ -702,6 +702,23 @@ function switchTab(name){
   if(name==='insights')buildInsights();
   if(name==='history')buildHistory();
 }
+function currentTab(){
+  return VIEWS.find(v=>document.getElementById('view-'+v).classList.contains('active'))||'dashboard';
+}
+
+const content=document.getElementById('content');
+let touchStartX=0,touchStartY=0;
+content.addEventListener('touchstart',e=>{touchStartX=e.changedTouches[0].clientX;touchStartY=e.changedTouches[0].clientY;});
+content.addEventListener('touchend',e=>{
+  const touchEndX=e.changedTouches[0].clientX;const touchEndY=e.changedTouches[0].clientY;
+  const dx=touchEndX-touchStartX;const dy=touchEndY-touchStartY;
+  if(Math.abs(dx)>60 && Math.abs(dx)>Math.abs(dy)){
+    const idx=VIEWS.indexOf(currentTab());
+    if(dx<0 && idx<VIEWS.length-1) switchTab(VIEWS[idx+1]);
+    else if(dx>0 && idx>0) switchTab(VIEWS[idx-1]);
+  }
+});
+
 function buildAll(){buildDashboard();buildInsights();buildHistory();}
 
 // INIT
