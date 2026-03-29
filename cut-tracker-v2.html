@@ -14,8 +14,8 @@
 <style>
 :root{--bg:#080808;--bg1:#111111;--bg2:#1a1a1a;--bg3:#242424;--border:#2e2e2e;--border2:#3a3a3a;--text:#f0f0f0;--text2:#888;--text3:#555;--accent:#b8ff57;--accent-dim:rgba(184,255,87,0.12);--blue:#4a9eff;--orange:#ff8c3a;--teal:#3ecfaa;--red:#ff5757;--purple:#a78bfa;--warn:#ffb547;--warn-bg:rgba(255,181,71,0.1);--ok-bg:rgba(62,207,170,0.1);--rad:10px;--rad-sm:6px;}
 *{box-sizing:border-box;margin:0;padding:0;}
-html,body{min-height:100vh;height:100%;background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:15px;overflow:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
-#app{display:flex;flex-direction:column;min-height:100vh;height:100vh;max-width:480px;margin:0 auto;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 14px);}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:15px;overflow:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
+#app{display:flex;flex-direction:column;height:100vh;max-width:480px;margin:0 auto;padding-bottom:env(safe-area-inset-bottom,0);}
 #header{padding:16px 20px 0;flex-shrink:0;}
 #header h1{font-size:22px;font-weight:600;letter-spacing:-0.5px;}
 #header h1 span{color:var(--accent);}
@@ -23,7 +23,7 @@ html,body{min-height:100vh;height:100%;background:var(--bg);color:var(--text);fo
 #tabs{display:flex;gap:2px;padding:14px 20px 0;flex-shrink:0;border-bottom:1px solid var(--border);}
 .tab{flex:1;text-align:center;padding:8px 4px;font-size:12px;font-weight:500;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.2s;letter-spacing:0.03em;text-transform:uppercase;}
 .tab.active{color:var(--accent);border-bottom-color:var(--accent);}
-#content{flex:1;overflow-y:auto;padding:20px 20px calc(20px + env(safe-area-inset-bottom,32px));scroll-behavior:smooth;scroll-padding-bottom:calc(20px + env(safe-area-inset-bottom,32px));touch-action:pan-y;}
+#content{flex:1;overflow-y:auto;padding:20px 20px calc(20px + env(safe-area-inset-bottom,16px));scroll-behavior:smooth;scroll-padding-bottom:calc(20px + env(safe-area-inset-bottom,16px));}
 #content::-webkit-scrollbar{width:3px;}
 #content::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
 .view{display:none;}.view.active{display:block;animation:fadeIn 0.25s ease;}
@@ -123,6 +123,21 @@ input:focus,textarea:focus{border-color:var(--accent);}
     <div class="tab" onclick="switchTab('history')">Storico</div>
   </div>
   <div id="content">
+
+    <!-- SETUP PROFILO -->
+    <div class="view" id="view-setup" style="display:none;">
+      <div class="card">
+        <div class="card-title">Configurazione profilo</div>
+        <div class="form-section"><label class="form-label">Nome</label><input type="text" id="profile-name" placeholder="Es. Andrea"></div>
+        <div class="form-section"><label class="form-label">Età</label><input type="number" id="profile-age" placeholder="38"></div>
+        <div class="form-section"><label class="form-label">Sesso</label><select id="profile-sex"><option value="M">Maschile</option><option value="F">Femminile</option></select></div>
+        <div class="form-section"><label class="form-label">Altezza (cm)</label><input type="number" id="profile-height" placeholder="173"></div>
+        <div class="form-section"><label class="form-label">Peso iniziale (kg)</label><input type="number" id="profile-weight" placeholder="78.8"></div>
+        <div class="form-section"><label class="form-label">Obiettivo peso (kg)</label><input type="number" id="profile-target-weight" placeholder="75"></div>
+        <div class="form-section"><label class="form-label">Allenamenti settimanali</label><input type="number" id="profile-workouts-week" placeholder="2"></div>
+        <button class="btn" onclick="saveUserProfile()">Inizia</button>
+      </div>
+    </div>
 
     <!-- DASHBOARD -->
     <div class="view active" id="view-dashboard">
@@ -246,24 +261,25 @@ input:focus,textarea:focus{border-color:var(--accent);}
 <div class="toast" id="toast"></div>
 
 <script>
-const PROFILE={age:38,height:173,startWeight:78.8,bmr:1684,tdee:2350,protTarget:126,waterTarget:2750,targetWeight:75};
+const SEED_DAYS=[];
+const SEED_WORKOUTS=[];
 
-const SEED_DAYS=[
-  {date:'2026-03-20',kcal:1989,prot:135,fat:86, carb:160,water:1800,weight:78.8,gym:false},
-  {date:'2026-03-21',kcal:2199,prot:151,fat:78, carb:221,water:1800,weight:null,gym:false},
-  {date:'2026-03-22',kcal:1888,prot:117,fat:70, carb:184,water:1800,weight:null,gym:false},
-  {date:'2026-03-23',kcal:1760,prot:99, fat:71, carb:179,water:1400,weight:null,gym:true},
-  {date:'2026-03-24',kcal:1728,prot:133,fat:50, carb:159,water:null,weight:null,gym:false},
-  {date:'2026-03-25',kcal:2000,prot:120,fat:100,carb:250,water:null,weight:null,gym:true},
-  {date:'2026-03-26',kcal:2000,prot:80, fat:100,carb:300,water:1800,weight:null,gym:false},
-  {date:'2026-03-27',kcal:1651,prot:98, fat:69, carb:153,water:1400,weight:78.2,gym:false},
-  {date:'2026-03-28',kcal:2000,prot:130,fat:100,carb:200,water:1400,weight:null,gym:true},
-];
-const SEED_WORKOUTS=[
-  {date:'2026-03-23',title:'Trazione + Front Lever',notes:'Trazione +15kg: 6 serie (5x2 @ RPE 9-10)\nTrazione supina +20kg: 4 serie @ RPE 9.5-10\nFront Lever tenuta: 8s / 10s / 8s\nPiegamenti, rematore inv., dip tricipiti, hollow rock, crunch'},
-  {date:'2026-03-25',title:'Chin-up + Dip zavorra',notes:'Trazione supina +20kg: 5 serie (1x3, 4x4) @ RPE 10\nDip +20kg: 5x5 @ RPE 8.5-10\nPiegamenti 2x12, rematore inv. 2x12\nHollow rock: 62s / 44s, crunch, tocco talloni'},
-  {date:'2026-03-28',title:'Skill session',notes:'Back lever full (pochi secondi mantenuti)\nTrazioni neutre leggere\nDip in planche tuck\nAddominali — sessione 30 min tranquilla'},
-];
+let PROFILE=null;
+
+function computeProfileValues(p){
+  const age=Number(p.age)||0; const h=Number(p.height)||173; const w=Number(p.startWeight)||70;
+  const sex=(p.sex||'M').toUpperCase();
+  const bmr=Math.round(10*w+6.25*h-5*age+(sex==='M'?5:-161));
+  const tdee=Math.round(bmr*1.55);
+  const protTarget=Math.round(w*1.8);
+  const waterTarget=Math.round(w*35);
+  return {...p,bmr,tdee,protTarget,waterTarget};
+}
+
+function loadProfile(){
+  try{const p=JSON.parse(localStorage.getItem('cutlog_profile')||'null');return p?computeProfileValues(p):null;}catch(e){return null;}
+}
+function saveProfile(p){localStorage.setItem('cutlog_profile',JSON.stringify(p));}
 
 function loadData(){
   try{
@@ -273,6 +289,7 @@ function loadData(){
   }catch(e){return{days:SEED_DAYS,workouts:SEED_WORKOUTS};}
 }
 function saveData(d,w){localStorage.setItem('cutlog_days',JSON.stringify(d));localStorage.setItem('cutlog_workouts',JSON.stringify(w));}
+PROFILE=loadProfile();
 let{days,workouts}=loadData();
 if(!localStorage.getItem('cutlog_days'))saveData(days,workouts);
 
@@ -342,8 +359,8 @@ function getStats(){
   const avgWater=waters.length?round(avg(waters)):null;
   const firstW=weights[0]||null,lastW=weights[weights.length-1]||null;
   const weightDelta=(firstW&&lastW&&weights.length>1)?round(lastW-firstW,1):null;
-  const deficit=round(PROFILE.tdee-avgKcal);
-  const daysLow=sorted.filter(d=>d.prot<PROFILE.protTarget).length;
+  const deficit=PROFILE?round(PROFILE.tdee-avgKcal):0;
+  const daysLow=PROFILE?sorted.filter(d=>d.prot<PROFILE.protTarget).length:0;
   const gymDays=sorted.filter(d=>d.gym).length;
   let regression=null;
   if(wEntries.length>=2){
@@ -356,12 +373,59 @@ function getStats(){
 let charts={};
 function dc(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
 
+function showSetupView(){
+  document.getElementById('tabs').style.display='none';
+  document.querySelectorAll('.view').forEach(v=>{v.classList.remove('active');v.style.display='none';});
+  const setup=document.getElementById('view-setup');
+  setup.classList.add('active');
+  setup.style.display='block';
+}
+
+function saveUserProfile(){
+  const name=document.getElementById('profile-name').value.trim();
+  const age=parseInt(document.getElementById('profile-age').value,10);
+  const sex=document.getElementById('profile-sex').value;
+  const height=parseFloat(document.getElementById('profile-height').value);
+  const startWeight=parseFloat(document.getElementById('profile-weight').value);
+  const targetWeight=parseFloat(document.getElementById('profile-target-weight').value);
+  const workoutsWeek=parseInt(document.getElementById('profile-workouts-week').value,10);
+
+  if(!name||isNaN(age)||!sex||isNaN(height)||isNaN(startWeight)||isNaN(targetWeight)||isNaN(workoutsWeek)){
+    toast('Completa tutti i campi del profilo');return;
+  }
+
+  PROFILE=computeProfileValues({name,age,sex,height,startWeight,targetWeight,workoutsWeek});
+  saveProfile(PROFILE);
+  document.getElementById('view-setup').classList.remove('active');
+  document.getElementById('view-setup').style.display='none';
+  document.getElementById('tabs').style.display='flex';
+  activeFilter='max';
+  buildFilterBar();
+  buildAll();
+  switchTab('dashboard');
+  toast('✓ Profilo salvato');
+}
+
 function buildDashboard(){
-  const s=getStats();if(!s)return;
+  if(!PROFILE){showSetupView(); return;}
+  const s=getStats();
+  if(!s){
+    document.getElementById('header-sub').textContent='Nessun dato. Inizia aggiungendo un log.';
+    document.getElementById('d-weight').textContent=PROFILE.startWeight?PROFILE.startWeight.toFixed(1)+' kg':'—';
+    document.getElementById('d-weight-delta').textContent='';
+    document.getElementById('d-deficit').textContent='—';
+    document.getElementById('d-deficit').className='val';
+    document.getElementById('d-kcal-avg').textContent='—';
+    document.getElementById('d-days').textContent='0';
+    document.getElementById('d-prot-avg').textContent=PROFILE.protTarget+'g';
+    document.getElementById('d-prot-status').textContent='—';
+    return;
+  }
   document.getElementById('header-sub').textContent=`${s.n} giorni · inizio ${fmtDate(s.sorted[0].date)}`;
 
   // metrics
-  document.getElementById('d-weight').textContent=s.lastW?s.lastW.toFixed(1)+' kg':'—';
+  const lastWeight=s.lastW||PROFILE.startWeight;
+  document.getElementById('d-weight').textContent=lastWeight?lastWeight.toFixed(1)+' kg':'—';
   const dEl=document.getElementById('d-weight-delta');
   if(s.weightDelta!==null){dEl.textContent=(s.weightDelta>0?'+':'')+s.weightDelta+' kg';dEl.style.color=s.weightDelta<0?'var(--teal)':'var(--warn)';}
   else dEl.textContent='';
@@ -523,7 +587,7 @@ function buildTargetBox(){
     <div class="tb-row"><span class="tb-k">Grasso da perdere</span><span class="tb-v">~${tolose} kg</span></div>
     ${daysNeeded?`<div class="tb-row"><span class="tb-k">Stima tempo (deficit attuale)</span><span class="tb-v">~${months} mesi (${daysNeeded} gg)</span></div>`:''}
     <div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(167,139,250,0.15);font-size:12px;color:var(--text2);line-height:1.65;">
-      <strong style="color:var(--text)">Parere:</strong> 75 kg è l'obiettivo giusto per te. Con la tua massa magra stimata saresti intorno al <strong style="color:var(--accent)">${targetBF}% di BF</strong> — zona "athletic lean", quella in cui il rapporto forza/peso è ottimale per il calisthenics. Scendere sotto i 72–73 kg significherebbe sacrificare muscolo e rendere difficile mantenere i carichi zavorrati. <strong style="color:var(--accent)">75 kg è il punto dolce</strong> tra estetica, performance e sostenibilità a lungo termine.
+      <strong style="color:var(--text)">Parere:</strong> ${target} kg è un obiettivo raggiungibile. Con la tua massa magra stimata saresti intorno al <strong style="color:var(--accent)">${targetBF}% di BF</strong> — zona "athletic lean". Mantieni deficit moderato e allena ${PROFILE.workoutsWeek||2} volte a settimana. <strong style="color:var(--accent)">Continua così</strong> per performance sostenibili.
     </div>`;
 }
 
@@ -534,7 +598,18 @@ function buildInsights(){
   const prev=activeFilter;activeFilter='max';
   const s=getStats();activeFilter=prev;
   const cont=document.getElementById('insights-list');cont.innerHTML='';
-  if(!s){cont.innerHTML='<p style="color:var(--text3);font-size:13px">Nessun dato. Inizia a loggare.</p>';return;}
+  if(PROFILE){
+    const p=PROFILE;
+    const diff=p.startWeight-p.targetWeight;
+    const trend=diff>0?'deficit calorico per dimagrimento':'surplus calorico per aumento peso';
+    const opinion=`Ciao ${p.name}, obiettivo ${p.targetWeight} kg da ${p.startWeight} kg con ${p.workoutsWeek} allenamenti/sett. Questo è un buon punto di partenza, presta attenzione a mantenere le proteine a ~${p.protTarget}g/più acqua ${p.waterTarget}ml.`;
+    const opType=diff>0?'good':'info';
+    const opAction=diff>0?'Mantieni un deficit controllato 300-500 kcal/die.':'Focalizzati su carboidrati e proteine per crescita muscolare.';
+    const opEl=document.createElement('div');opEl.className='insight '+opType;
+    opEl.innerHTML=`<div class="insight-icon">🧠</div><div class="insight-body"><div class="title">Parere profilo</div><div class="desc">${opinion}</div><div class="action">→ ${opAction}</div></div>`;
+    cont.appendChild(opEl);
+  }
+  if(!s){cont.innerHTML+='<p style="color:var(--text3);font-size:13px;margin-top:10px;">Nessun dato. Inizia a loggare.</p>';return;}
 
   const ins=[];
   if(s.weightDelta!==null){
@@ -702,24 +777,13 @@ function switchTab(name){
   if(name==='insights')buildInsights();
   if(name==='history')buildHistory();
 }
-function currentTab(){
-  return VIEWS.find(v=>document.getElementById('view-'+v).classList.contains('active'))||'dashboard';
+function buildAll(){
+  if(!PROFILE){showSetupView();return;}
+  document.getElementById('tabs').style.display='flex';
+  buildDashboard();
+  buildInsights();
+  buildHistory();
 }
-
-const content=document.getElementById('content');
-let touchStartX=0,touchStartY=0;
-content.addEventListener('touchstart',e=>{touchStartX=e.changedTouches[0].clientX;touchStartY=e.changedTouches[0].clientY;});
-content.addEventListener('touchend',e=>{
-  const touchEndX=e.changedTouches[0].clientX;const touchEndY=e.changedTouches[0].clientY;
-  const dx=touchEndX-touchStartX;const dy=touchEndY-touchStartY;
-  if(Math.abs(dx)>60 && Math.abs(dx)>Math.abs(dy)){
-    const idx=VIEWS.indexOf(currentTab());
-    if(dx<0 && idx<VIEWS.length-1) switchTab(VIEWS[idx+1]);
-    else if(dx>0 && idx>0) switchTab(VIEWS[idx-1]);
-  }
-});
-
-function buildAll(){buildDashboard();buildInsights();buildHistory();}
 
 // INIT
 const today=new Date().toISOString().slice(0,10);
@@ -733,8 +797,7 @@ if(allDates.length){
   activeFilter=latestMonth;
 }
 
-buildFilterBar();
-buildDashboard();
+buildAll();
 
 // PWA
 if('serviceWorker' in navigator){
