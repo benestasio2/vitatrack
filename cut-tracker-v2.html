@@ -107,6 +107,20 @@ input:focus,textarea:focus{border-color:var(--accent);}
 .btn-small:hover{opacity:0.85;}
 .toast{position:fixed;bottom:calc(88px + var(--safe-bottom));left:50%;transform:translateX(-50%) translateY(20px);background:var(--bg2);border:1px solid var(--border2);border-radius:var(--rad);padding:10px 18px;font-size:13px;font-weight:500;opacity:0;transition:all 0.3s;pointer-events:none;z-index:999;white-space:nowrap;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+/* BARCODE SCANNER OVERLAY */
+#scanner-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:10000;flex-direction:column;align-items:center;justify-content:center;padding-top:var(--safe-top);}
+#scanner-overlay.open{display:flex;}
+#scanner-wrap{position:relative;width:min(380px,92vw);border-radius:16px;overflow:hidden;background:#000;box-shadow:0 0 40px rgba(0,0,0,0.5);}
+#scanner-video{width:100%;height:auto;display:block;max-height:60vh;object-fit:cover;}
+#scanner-aim{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;}
+.aim-box{width:72%;aspect-ratio:3/1.2;border:2px solid var(--accent);border-radius:8px;box-shadow:0 0 0 2000px rgba(0,0,0,.35);}
+.aim-corner{position:absolute;width:20px;height:20px;border-color:var(--accent);border-style:solid;}
+.aim-corner.tl{top:0;left:0;border-width:3px 0 0 3px;border-radius:4px 0 0 0;}
+.aim-corner.tr{top:0;right:0;border-width:3px 3px 0 0;border-radius:0 4px 0 0;}
+.aim-corner.bl{bottom:0;left:0;border-width:0 0 3px 3px;border-radius:0 0 0 4px;}
+.aim-corner.br{bottom:0;right:0;border-width:0 3px 3px 0;border-radius:0 0 4px 0;}
+.scan-line{position:absolute;width:72%;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);animation:scanline 2s ease-in-out infinite;opacity:.8;}
+@keyframes scanline{0%,100%{top:28%}50%{top:68%}}
 @media(min-width:480px){#app{border-left:1px solid var(--border);border-right:1px solid var(--border);}}
 </style>
 </head>
@@ -277,17 +291,13 @@ input:focus,textarea:focus{border-color:var(--accent);}
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
           <button class="btn" onclick="lookupFoodBarcode()" style="width:auto;padding:10px 14px;">Cerca barcode</button>
-          <button class="btn" onclick="toggleFoodScanner()" style="width:auto;padding:10px 14px;background:var(--blue);color:#fff;">📷 Scansiona</button>
+          <button class="btn" onclick="openScanner('diary')" style="width:auto;padding:10px 14px;background:var(--blue);color:#fff;">📷 Scansiona</button>
         </div>
         <div class="form-row" style="margin-top:8px;">
           <div class="form-input-wrap" style="grid-column:1 / -1;"><span>Nome prodotto</span><input type="text" id="food-name-query" placeholder="es. skyr vaniglia, riso basmati, pane integrale"></div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <button class="btn" onclick="searchFoodByName()" style="width:auto;padding:10px 14px;">Cerca per nome</button>
-        </div>
-        <div id="food-scanner-wrap" style="display:none;margin-top:12px;">
-          <video id="food-video" autoplay playsinline muted style="width:100%;border-radius:var(--rad-sm);border:1px solid var(--border);background:#000;min-height:180px;object-fit:cover;"></video>
-          <div id="food-scan-status" style="font-size:11px;color:var(--text3);margin-top:8px;">Inquadra il barcode con la fotocamera posteriore.</div>
         </div>
       </div>
       <div class="card" style="margin-bottom:16px;">
@@ -888,84 +898,176 @@ function renderFoodResult(){
   updateFoodEstimate();
 }
 
+// ── BARCODE SCANNER ENGINE ────────────────────────────────
+let scannerActive=false, scannerStream=null, scannerCtx=null, torchOn=false, liveRafId=null, zbarReady=false, zbarModule=null, lastScannedFood=null;
+
+async function loadZBar(){
+  if(zbarReady) return true;
+  try {
+    await new Promise((res, rej) => {
+      const s=document.createElement('script');
+      s.src='https://cdn.jsdelivr.net/npm/@undecaf/zbar-wasm@0.9.15/dist/index.js';
+      s.onload=res; s.onerror=rej; document.head.appendChild(s);
+    });
+    if(window.zbarWasm){ await window.zbarWasm.ready; zbarModule=window.zbarWasm; zbarReady=true; return true; }
+  } catch(e){ console.warn('ZBar load error', e); }
+  return false;
+}
+
+function openScanner(ctx){
+  scannerCtx=ctx; lastScannedFood=null; torchOn=false;
+  document.getElementById('scanner-overlay').classList.add('open');
+  document.getElementById('scanner-result-card').style.display='none';
+  setScanStatus('Avvio fotocamera...');
+  if(navigator.mediaDevices?.getUserMedia) startLiveCamera();
+  else setScanStatus('Fotocamera non supportata. Usa caricamento foto.', 'var(--red)');
+}
+
+async function startLiveCamera(){
+  const video=document.getElementById('scanner-video');
+  const constraints=[
+    {video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}}},
+    {video:{facingMode:'environment'}},
+    {video:true}
+  ];
+  for(const c of constraints){
+    try { scannerStream=await navigator.mediaDevices.getUserMedia(c); break; } catch(e){}
+  }
+  if(!scannerStream){ setScanStatus('Accesso fotocamera negato.', 'var(--red)'); return; }
+  video.srcObject=scannerStream;
+  try {
+    await video.play();
+    const caps=scannerStream.getVideoTracks()[0].getCapabilities?.()||{};
+    if(caps.torch) document.getElementById('scanner-torch').style.display='inline-flex';
+  } catch(e){}
+  scannerActive=true;
+  if('BarcodeDetector' in window) liveNativeScan(video);
+  else { setScanStatus('Caricamento motore fallback...'); if(await loadZBar()) liveZBarScan(video); }
+}
+
+function liveNativeScan(video){
+  const detector=new BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e','code_128']});
+  setScanStatus('Inquadra il barcode del prodotto');
+  async function tick(){
+    if(!scannerActive) return;
+    try {
+      const codes=await detector.detect(video);
+      if(codes.length) onBarcodeDetected(codes[0].rawValue);
+      else liveRafId=requestAnimationFrame(tick);
+    } catch(e){ liveRafId=requestAnimationFrame(tick); }
+  }
+  tick();
+}
+
+async function liveZBarScan(video){
+  const canvas=document.createElement('canvas'), ctx2d=canvas.getContext('2d');
+  let lastScan=0; setScanStatus('Inquadra e tieni fermo il prodotto');
+  async function tick(){
+    if(!scannerActive) return;
+    const now=Date.now();
+    if(now-lastScan > 130 && video.readyState >= 2){
+      lastScan=now; canvas.width=video.videoWidth; canvas.height=video.videoHeight;
+      ctx2d.drawImage(video,0,0);
+      const imageData=ctx2d.getImageData(0,0,canvas.width,canvas.height);
+      const res=await zbarModule.scanImageData(imageData);
+      if(res.length){ onBarcodeDetected(res[0].decode()); return; }
+    }
+    liveRafId=requestAnimationFrame(tick);
+  }
+  tick();
+}
+
+function onBarcodeDetected(code){
+  scannerActive=false; if(liveRafId) cancelAnimationFrame(liveRafId);
+  setScanStatus('Codice: '+code+' - ricerca...');
+  fetchOpenFoodFacts(code);
+}
+
+async function fetchOpenFoodFacts(barcode){
+  try {
+    const res=await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
+    const data=await res.json();
+    if(data.status!==1){ setScanStatus('Prodotto non trovato.', 'var(--warn)'); return; }
+    lastScannedFood=normalizeFoodProduct(data.product, barcode);
+    setScanStatus('✓ Trovato', 'var(--teal)');
+    document.getElementById('sr-name').textContent=lastScannedFood.name + (lastScannedFood.brand?' ('+lastScannedFood.brand+')':'');
+    document.getElementById('sr-macros').innerHTML=`Per 100g: <strong>${lastScannedFood.kcal} kcal</strong> · P ${lastScannedFood.prot}g · G ${lastScannedFood.fat}g · C ${lastScannedFood.carb}g`;
+    document.getElementById('scanner-result-card').style.display='block';
+  } catch(e){ setScanStatus('Errore di rete.', 'var(--red)'); }
+}
+
+function confirmScan(){
+  if(!lastScannedFood) return;
+  scannedFood=lastScannedFood;
+  closeScanner();
+  // Auto-save if not in favorites
+  if(!favorites.some(f => f.code === scannedFood.code)){
+    favorites.push({...scannedFood});
+    saveData(days, workouts, weights, stepsEntries, favorites);
+    renderFavorites();
+  }
+  renderFoodResult();
+  toast('✓ Prodotto acquisito');
+}
+
+async function handleImageFile(input){
+  const file=input.files[0]; if(!file) return;
+  setScanStatus('Analisi immagine...');
+  const img=new Image(), url=URL.createObjectURL(file);
+  img.onload=async ()=>{
+    URL.revokeObjectURL(url);
+    const canvas=document.getElementById('scanner-canvas'), ctx2d=canvas.getContext('2d');
+    canvas.width=img.naturalWidth; canvas.height=img.naturalHeight;
+    ctx2d.drawImage(img,0,0);
+    // Try native then zbar
+    let code=null;
+    if('BarcodeDetector' in window) {
+      const codes=await new BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e']}).detect(canvas);
+      if(codes.length) code=codes[0].rawValue;
+    }
+    if(!code && await loadZBar()){
+      const res=await zbarModule.scanImageData(ctx2d.getImageData(0,0,canvas.width,canvas.height));
+      if(res.length) code=res[0].decode();
+    }
+    if(code) onBarcodeDetected(code);
+    else setScanStatus('Impossibile leggere il codice dalla foto.', 'var(--warn)');
+  };
+  img.src=url;
+}
+
+function lookupManual(){
+  const val=document.getElementById('scan-manual-input').value.trim();
+  if(val.length>=8) onBarcodeDetected(val);
+  else toast('Inserisci almeno 8 cifre');
+}
+
+function resumeScan(){
+  document.getElementById('scanner-result-card').style.display='none';
+  startLiveCamera();
+}
+
+function closeScanner(){
+  scannerActive=false; if(liveRafId) cancelAnimationFrame(liveRafId);
+  if(scannerStream) scannerStream.getTracks().forEach(t=>t.stop());
+  document.getElementById('scanner-overlay').classList.remove('open');
+}
+
+async function toggleTorch(){
+  if(!scannerStream) return;
+  const track=scannerStream.getVideoTracks()[0]; torchOn=!torchOn;
+  try { await track.applyConstraints({advanced:[{torch:torchOn}]}); } catch(e){}
+}
+
+function setScanStatus(msg, color){
+  const el=document.getElementById('scanner-status');
+  el.textContent=msg; el.style.color=color||'rgba(255,255,255,0.6)';
+}
+
 async function lookupFoodBarcode(barcodeValue){
   const input=document.getElementById('food-barcode');
   const barcode=String(barcodeValue || input?.value || '').replace(/\D/g,'');
   if(!barcode || barcode.length<8){toast('Inserisci un barcode valido');return;}
-  if(input)input.value=barcode;
-
-  const result=document.getElementById('food-result');
-  if(result)result.innerHTML='<div style="font-size:13px;color:var(--text3);">Ricerca prodotto in corso...</div>';
-
-  try{
-    const res=await fetch(`https://world.openfoodfacts.org/api/v2/product/${barcode}.json?fields=code,product_name,generic_name,brands,image_front_small_url,image_small_url,nutriments`);
-    if(!res.ok)throw new Error('network');
-    const data=await res.json();
-    if(data.status!==1 || !data.product){throw new Error('not-found');}
-    scannedFood=normalizeFoodProduct(data.product,barcode);
-    renderFoodResult();
-    toast('✓ Prodotto trovato');
-  }catch(e){
-    scannedFood=null;
-    renderFoodResult();
-    toast(e.message==='not-found'?'Prodotto non trovato':'Errore ricerca alimento');
-  }
-}
-
-async function toggleFoodScanner(){
-  if(foodScanStream){
-    stopFoodScanner();
-    toast('Scanner chiuso');
-    return;
-  }
-  if(!('BarcodeDetector' in window)){
-    toast('Scanner live non supportato: usa il barcode manuale');
-    return;
-  }
-  if(!navigator.mediaDevices?.getUserMedia){
-    toast('Fotocamera non disponibile');
-    return;
-  }
-
-  const wrap=document.getElementById('food-scanner-wrap');
-  const video=document.getElementById('food-video');
-  const status=document.getElementById('food-scan-status');
-
-  try{
-    wrap.style.display='block';
-    status.textContent='Avvio fotocamera...';
-    foodScanStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}}});
-    video.srcObject=foodScanStream;
-    await video.play();
-
-    const detector=new BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e']});
-    status.textContent='Inquadra il barcode al centro dello schermo.';
-
-    foodScanTimer=setInterval(async()=>{
-      if(!foodScanStream)return;
-      try{
-        const codes=await detector.detect(video);
-        if(codes && codes.length && codes[0].rawValue){
-          const code=codes[0].rawValue;
-          document.getElementById('food-barcode').value=code;
-          stopFoodScanner();
-          lookupFoodBarcode(code);
-        }
-      }catch(_e){}
-    },700);
-  }catch(e){
-    stopFoodScanner();
-    toast('Impossibile aprire la fotocamera');
-  }
-}
-
-function stopFoodScanner(){
-  if(foodScanTimer){clearInterval(foodScanTimer);foodScanTimer=null;}
-  if(foodScanStream){foodScanStream.getTracks().forEach(track=>track.stop());foodScanStream=null;}
-  const video=document.getElementById('food-video');
-  const wrap=document.getElementById('food-scanner-wrap');
-  if(video)video.srcObject=null;
-  if(wrap)wrap.style.display='none';
+  fetchOpenFoodFacts(barcode);
 }
 
 function addFoodToDay(){
@@ -1547,7 +1649,7 @@ function switchLogMode(m){
 // NAV
 const VIEWS=['dashboard','insights','log','food','history'];
 function switchTab(name){
-  if(name!=='food')stopFoodScanner();
+  if(name!=='food')closeScanner();
   const setupView=document.getElementById('view-setup');
   if(setupView){
     setupView.classList.remove('active');
